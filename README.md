@@ -38,3 +38,9 @@ eap.cmd component refresh
 
 El catálogo incluido dentro de EAP se mantiene como snapshot de bootstrap y
 respaldo offline.
+
+## Crear un componente
+
+El contrato completo, los resolvers admitidos, ejemplos, límites y el proceso
+de prueba y publicación están documentados en
+[`CREAR_COMPONENTES.md`](CREAR_COMPONENTES.md).
