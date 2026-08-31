@@ -7,6 +7,11 @@ Cada componente se declara mediante un manifiesto JSON dentro de
 EAP obtiene siempre una revisión inmutable del repositorio, valida todos los
 manifiestos y conserva una copia local antes de activarla.
 
+Los manifiestos actuales usan `schemaVersion: 2` y declaran obligatoriamente un
+bloque `info` con una descripción breve y las rutas importantes relativas al
+profile o al workspace. EAP resuelve esas rutas de forma absoluta tanto en la
+pantalla principal como antes de instalar el componente.
+
 ## Estructura
 
 ```text

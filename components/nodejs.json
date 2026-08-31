@@ -1,10 +1,35 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "nodejs",
   "displayName": "Node.js",
   "description": "Runtime JavaScript y herramientas npm oficiales para Windows",
   "category": "runtimes",
   "kind": "runtime",
+  "info": {
+    "description": "Node.js aísla la configuración, cachés y paquetes globales de npm dentro del profile activo.",
+    "paths": [
+      {
+        "displayName": "Caché npm",
+        "base": "profile",
+        "relativePath": "home/.npm"
+      },
+      {
+        "displayName": "Paquetes npm globales",
+        "base": "profile",
+        "relativePath": "home/.npm-global"
+      },
+      {
+        "displayName": "Configuración npm (.npmrc)",
+        "base": "profile",
+        "relativePath": "home/.npmrc"
+      },
+      {
+        "displayName": "Caché Corepack",
+        "base": "profile",
+        "relativePath": "home/.cache/node/corepack"
+      }
+    ]
+  },
   "launchers": [],
   "capability": {
     "id": "runtime.nodejs",

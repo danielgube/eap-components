@@ -1,10 +1,30 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "python",
   "displayName": "Python",
   "description": "Runtime CPython completo con pip y venv para Windows",
   "category": "runtimes",
   "kind": "runtime",
+  "info": {
+    "description": "Python conserva paquetes de usuario, caché y configuración de pip dentro del profile activo.",
+    "paths": [
+      {
+        "displayName": "Paquetes de usuario Python",
+        "base": "profile",
+        "relativePath": "home/.python"
+      },
+      {
+        "displayName": "Caché pip",
+        "base": "profile",
+        "relativePath": "home/.cache/pip"
+      },
+      {
+        "displayName": "Configuración pip",
+        "base": "profile",
+        "relativePath": "home/pip/pip.ini"
+      }
+    ]
+  },
   "launchers": [],
   "capability": {
     "id": "runtime.python",

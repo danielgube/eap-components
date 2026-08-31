@@ -1,10 +1,25 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "bruno",
   "displayName": "Bruno",
   "description": "Cliente de APIs local-first y compatible con Git",
   "category": "applications",
   "kind": "application",
+  "info": {
+    "description": "Cliente de APIs local-first cuyos ajustes y colecciones permanecen dentro del profile activo.",
+    "paths": [
+      {
+        "displayName": "Configuración Bruno",
+        "base": "profile",
+        "relativePath": "components/bruno/user-data"
+      },
+      {
+        "displayName": "Colecciones y workspaces Bruno",
+        "base": "profile",
+        "relativePath": "home/Documents/bruno"
+      }
+    ]
+  },
   "launchers": [
     {
       "id": "bruno",

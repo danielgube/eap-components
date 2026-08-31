@@ -1,10 +1,25 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "git",
   "displayName": "Git",
   "description": "Git for Windows en distribución MinGit ZIP",
   "category": "version-control",
   "kind": "tool",
+  "info": {
+    "description": "Git for Windows usa una configuración global y claves SSH aisladas en el home del profile.",
+    "paths": [
+      {
+        "displayName": "Configuración Git",
+        "base": "profile",
+        "relativePath": "home/.gitconfig"
+      },
+      {
+        "displayName": "Claves SSH",
+        "base": "profile",
+        "relativePath": "home/.ssh"
+      }
+    ]
+  },
   "launchers": [],
   "capability": {
     "id": "tool.git",

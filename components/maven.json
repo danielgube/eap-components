@@ -1,10 +1,25 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "maven",
   "displayName": "Apache Maven",
   "description": "Herramienta de construcción y gestión de dependencias para Java",
   "category": "build-tools",
   "kind": "tool",
+  "info": {
+    "description": "Maven mantiene sus ajustes y el repositorio local de dependencias en el home del profile.",
+    "paths": [
+      {
+        "displayName": "Configuración Maven",
+        "base": "profile",
+        "relativePath": "home/.m2/settings.xml"
+      },
+      {
+        "displayName": "Repositorio local Maven",
+        "base": "profile",
+        "relativePath": "home/.m2/repository"
+      }
+    ]
+  },
   "launchers": [],
   "capability": {
     "id": "tool.maven",

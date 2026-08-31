@@ -1,10 +1,25 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "dbeaver",
   "displayName": "DBeaver Community",
   "description": "Cliente universal de bases de datos, portable y de código abierto",
   "category": "applications",
   "kind": "application",
+  "info": {
+    "description": "Cliente universal de bases de datos con configuración y workspace privados en el profile activo.",
+    "paths": [
+      {
+        "displayName": "Datos privados DBeaver",
+        "base": "profile",
+        "relativePath": "components/dbeaver"
+      },
+      {
+        "displayName": "Workspace DBeaver",
+        "base": "profile",
+        "relativePath": "components/dbeaver/workspace"
+      }
+    ]
+  },
   "launchers": [
     {
       "id": "dbeaver",

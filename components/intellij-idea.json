@@ -1,10 +1,40 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "intellij-idea",
   "displayName": "IntelliJ IDEA",
   "description": "IDE unificado de JetBrains: uso gratuito o funciones Ultimate con licencia",
   "category": "applications",
   "kind": "application",
+  "info": {
+    "description": "IntelliJ IDEA mantiene configuración, cachés, plugins y logs separados dentro del profile activo.",
+    "paths": [
+      {
+        "displayName": "Configuración IntelliJ IDEA",
+        "base": "profile",
+        "relativePath": "components/intellij-idea/config"
+      },
+      {
+        "displayName": "Cachés IntelliJ IDEA",
+        "base": "profile",
+        "relativePath": "components/intellij-idea/system"
+      },
+      {
+        "displayName": "Plugins IntelliJ IDEA",
+        "base": "profile",
+        "relativePath": "components/intellij-idea/plugins"
+      },
+      {
+        "displayName": "Logs IntelliJ IDEA",
+        "base": "profile",
+        "relativePath": "components/intellij-idea/log"
+      },
+      {
+        "displayName": "Workspace activo",
+        "base": "workspace",
+        "relativePath": "."
+      }
+    ]
+  },
   "launchers": [
     {
       "id": "intellij-idea",

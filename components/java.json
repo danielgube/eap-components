@@ -1,10 +1,20 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "java",
   "displayName": "Java JDK",
   "description": "Distribuciones OpenJDK portables para Windows",
   "category": "runtimes",
   "kind": "runtime",
+  "info": {
+    "description": "Distribuciones OpenJDK portables que usan el home privado del profile para los datos del usuario Java.",
+    "paths": [
+      {
+        "displayName": "Home del usuario Java",
+        "base": "profile",
+        "relativePath": "home"
+      }
+    ]
+  },
   "launchers": [],
   "capability": {
     "id": "runtime.java",

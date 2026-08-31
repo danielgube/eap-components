@@ -2,7 +2,7 @@
 
 Esta guía permite añadir un componente sin conocer el código fuente de EAP.
 Describe el contrato público de los manifiestos de componentes para el esquema
-`schemaVersion: 1`, sus límites actuales y el proceso completo de prueba y
+`schemaVersion: 2`, sus límites actuales y el proceso completo de prueba y
 publicación.
 
 ## 1. Qué es un componente
@@ -100,12 +100,27 @@ Es el punto de partida recomendado para la mayoría de aplicaciones portables.
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "mi-cliente",
   "displayName": "Mi Cliente",
   "description": "Cliente portable de ejemplo",
   "category": "applications",
   "kind": "application",
+  "info": {
+    "description": "Cliente portable cuyos ajustes se conservan dentro del profile activo.",
+    "paths": [
+      {
+        "displayName": "Configuración de Mi Cliente",
+        "base": "profile",
+        "relativePath": "components/mi-cliente/user-data"
+      },
+      {
+        "displayName": "Workspace activo",
+        "base": "workspace",
+        "relativePath": "."
+      }
+    ]
+  },
   "launchers": [
     {
       "id": "mi-cliente",
@@ -207,12 +222,13 @@ Para adaptar el ejemplo hay que cambiar, como mínimo:
 
 | Campo | Obligatorio | Contrato |
 |---|---:|---|
-| `schemaVersion` | Sí | Debe valer `1`. |
+| `schemaVersion` | Sí | Debe valer `2`; EAP sólo conserva lectura compatible de manifiestos `1`. |
 | `id` | Sí | Identificador estable; debe coincidir con catálogo y archivo. |
 | `displayName` | Sí | Nombre visible para el usuario. |
 | `description` | Recomendado | Descripción breve. |
 | `category` | Opcional | Agrupación informativa, por ejemplo `applications`. |
 | `kind` | Sí | `application`, `external`, `runtime`, `service` o `tool`. |
+| `info` | Sí | Descripción breve y rutas importantes relativas. |
 | `launchers` | Sí | Lista; puede estar vacía salvo para `external`. |
 | `capability` | Recomendado | Capacidad que otras herramientas pueden requerir. |
 | `platform` | Recomendado | Metadatos de SO, arquitectura y archivo. |
@@ -226,7 +242,42 @@ Para adaptar el ejemplo hay que cambiar, como mínimo:
 | `environment` | Sí | Variables, PATH y comandos publicados. |
 | `requires` | Opcional | Dependencias informativas de componentes. |
 
-### 5.2 Identificadores y versiones
+### 5.2 Información y rutas importantes
+
+`info` explica qué aporta el componente y dónde guarda sus datos relevantes.
+EAP muestra este bloque antes de instalar y desde el acceso `[Ni]` de la
+pantalla principal.
+
+```json
+"info": {
+  "description": "Node.js aísla la configuración, cachés y paquetes globales de npm dentro del profile activo.",
+  "paths": [
+    {
+      "displayName": "Caché npm",
+      "base": "profile",
+      "relativePath": "home/.npm"
+    },
+    {
+      "displayName": "Configuración npm (.npmrc)",
+      "base": "profile",
+      "relativePath": "home/.npmrc"
+    }
+  ]
+}
+```
+
+Reglas:
+
+- `description` es obligatoria, no puede superar 400 caracteres y debe tener
+  como máximo tres frases breves.
+- `paths` debe contener al menos una entrada.
+- `base` sólo admite `profile` o `workspace`.
+- `relativePath` usa `/`, nunca es absoluta y no admite segmentos `..`.
+- Use `.` para señalar la raíz de la base elegida.
+- EAP concatena cada ruta relativa con el profile de datos o el workspace
+  activos y muestra el resultado como ruta absoluta.
+
+### 5.3 Identificadores y versiones
 
 Los IDs de componente, proveedor y launcher deben cumplir:
 
@@ -241,7 +292,7 @@ Las versiones resueltas deben comenzar por una letra o número, medir como
 máximo 128 caracteres y usar únicamente letras, números, `.`, `_`, `+` y `-`.
 EAP ordena normalmente las versiones usando todos sus grupos numéricos.
 
-### 5.3 Líneas o tracks
+### 5.4 Líneas o tracks
 
 ```json
 "tracks": [
@@ -602,7 +653,7 @@ o instalar:
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "producto-externo",
   "displayName": "Producto Externo",
   "kind": "external",
@@ -787,7 +838,7 @@ nuevo o sustituya temporalmente la URL de la misma fuente durante las pruebas.
 ## 17. Checklist antes de una pull request
 
 - [ ] El ID coincide en carpeta, archivo, manifiesto y catálogo.
-- [ ] `schemaVersion` es `1`.
+- [ ] `schemaVersion` es `2`.
 - [ ] `catalogVersion` se ha incrementado.
 - [ ] Proveedor y track predeterminados existen.
 - [ ] El resolver es compatible y todas las URLs son HTTPS.

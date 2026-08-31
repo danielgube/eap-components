@@ -1,8 +1,18 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "kiro",
   "displayName": "Kiro",
   "kind": "external",
+  "info": {
+    "description": "Instalación externa de Kiro vinculada a EAP para abrir el workspace activo.",
+    "paths": [
+      {
+        "displayName": "Workspace activo",
+        "base": "workspace",
+        "relativePath": "."
+      }
+    ]
+  },
   "launchers": [
     {
       "id": "kiro",

@@ -1,10 +1,30 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "vscodium",
   "displayName": "VSCodium",
   "description": "Build comunitaria open source de VS Code sin telemetría de Microsoft",
   "category": "applications",
   "kind": "application",
+  "info": {
+    "description": "VSCodium mantiene configuración y extensiones en el profile y abre el workspace activo.",
+    "paths": [
+      {
+        "displayName": "Configuración VSCodium",
+        "base": "profile",
+        "relativePath": "components/vscodium/user-data"
+      },
+      {
+        "displayName": "Extensiones VSCodium",
+        "base": "profile",
+        "relativePath": "components/vscodium/extensions"
+      },
+      {
+        "displayName": "Workspace activo",
+        "base": "workspace",
+        "relativePath": "."
+      }
+    ]
+  },
   "launchers": [
     {
       "id": "vscodium",
