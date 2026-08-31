@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "eclipse",
   "displayName": "Eclipse IDE",
   "description": "IDE portable con paquetes Java y Enterprise Java/Web",
@@ -11,12 +11,14 @@
       {
         "displayName": "Datos privados Eclipse",
         "base": "profile",
-        "relativePath": "components/eclipse"
+        "relativePath": "components/eclipse",
+        "type": "directory"
       },
       {
         "displayName": "Workspace activo",
         "base": "workspace",
-        "relativePath": "."
+        "relativePath": ".",
+        "type": "directory"
       }
     ]
   },

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "java",
   "displayName": "Java JDK",
   "description": "Distribuciones OpenJDK portables para Windows",
@@ -11,7 +11,8 @@
       {
         "displayName": "Home del usuario Java",
         "base": "profile",
-        "relativePath": "home"
+        "relativePath": "home",
+        "type": "directory"
       }
     ]
   },

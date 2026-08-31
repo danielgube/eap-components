@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "git",
   "displayName": "Git",
   "description": "Git for Windows en distribución MinGit ZIP",
@@ -11,12 +11,14 @@
       {
         "displayName": "Configuración Git",
         "base": "profile",
-        "relativePath": "home/.gitconfig"
+        "relativePath": "home/.gitconfig",
+        "type": "file"
       },
       {
         "displayName": "Claves SSH",
         "base": "profile",
-        "relativePath": "home/.ssh"
+        "relativePath": "home/.ssh",
+        "type": "directory"
       }
     ]
   },

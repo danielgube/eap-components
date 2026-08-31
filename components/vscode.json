@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "vscode",
   "displayName": "Visual Studio Code",
   "description": "Editor de Microsoft ligado al workspace del entorno",
@@ -11,17 +11,20 @@
       {
         "displayName": "Configuración VS Code",
         "base": "profile",
-        "relativePath": "components/vscode/user-data"
+        "relativePath": "components/vscode/user-data",
+        "type": "directory"
       },
       {
         "displayName": "Extensiones VS Code",
         "base": "profile",
-        "relativePath": "components/vscode/extensions"
+        "relativePath": "components/vscode/extensions",
+        "type": "directory"
       },
       {
         "displayName": "Workspace activo",
         "base": "workspace",
-        "relativePath": "."
+        "relativePath": ".",
+        "type": "directory"
       }
     ]
   },

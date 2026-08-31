@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "kiro",
   "displayName": "Kiro",
   "kind": "external",
@@ -9,7 +9,8 @@
       {
         "displayName": "Workspace activo",
         "base": "workspace",
-        "relativePath": "."
+        "relativePath": ".",
+        "type": "directory"
       }
     ]
   },

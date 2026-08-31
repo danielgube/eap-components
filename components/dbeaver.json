@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "dbeaver",
   "displayName": "DBeaver Community",
   "description": "Cliente universal de bases de datos, portable y de código abierto",
@@ -11,12 +11,14 @@
       {
         "displayName": "Datos privados DBeaver",
         "base": "profile",
-        "relativePath": "components/dbeaver"
+        "relativePath": "components/dbeaver",
+        "type": "directory"
       },
       {
         "displayName": "Workspace DBeaver",
         "base": "profile",
-        "relativePath": "components/dbeaver/workspace"
+        "relativePath": "components/dbeaver/workspace",
+        "type": "directory"
       }
     ]
   },

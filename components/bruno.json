@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "bruno",
   "displayName": "Bruno",
   "description": "Cliente de APIs local-first y compatible con Git",
@@ -11,12 +11,14 @@
       {
         "displayName": "Configuración Bruno",
         "base": "profile",
-        "relativePath": "components/bruno/user-data"
+        "relativePath": "components/bruno/user-data",
+        "type": "directory"
       },
       {
         "displayName": "Colecciones y workspaces Bruno",
         "base": "profile",
-        "relativePath": "home/Documents/bruno"
+        "relativePath": "home/Documents/bruno",
+        "type": "directory"
       }
     ]
   },

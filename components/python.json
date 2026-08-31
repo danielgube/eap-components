@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "python",
   "displayName": "Python",
   "description": "Runtime CPython completo con pip y venv para Windows",
@@ -11,17 +11,20 @@
       {
         "displayName": "Paquetes de usuario Python",
         "base": "profile",
-        "relativePath": "home/.python"
+        "relativePath": "home/.python",
+        "type": "directory"
       },
       {
         "displayName": "Caché pip",
         "base": "profile",
-        "relativePath": "home/.cache/pip"
+        "relativePath": "home/.cache/pip",
+        "type": "directory"
       },
       {
         "displayName": "Configuración pip",
         "base": "profile",
-        "relativePath": "home/pip/pip.ini"
+        "relativePath": "home/pip/pip.ini",
+        "type": "file"
       }
     ]
   },

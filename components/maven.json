@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "maven",
   "displayName": "Apache Maven",
   "description": "Herramienta de construcción y gestión de dependencias para Java",
@@ -11,12 +11,14 @@
       {
         "displayName": "Configuración Maven",
         "base": "profile",
-        "relativePath": "home/.m2/settings.xml"
+        "relativePath": "home/.m2/settings.xml",
+        "type": "file"
       },
       {
         "displayName": "Repositorio local Maven",
         "base": "profile",
-        "relativePath": "home/.m2/repository"
+        "relativePath": "home/.m2/repository",
+        "type": "directory"
       }
     ]
   },

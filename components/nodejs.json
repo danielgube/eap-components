@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "nodejs",
   "displayName": "Node.js",
   "description": "Runtime JavaScript y herramientas npm oficiales para Windows",
@@ -11,22 +11,26 @@
       {
         "displayName": "Caché npm",
         "base": "profile",
-        "relativePath": "home/.npm"
+        "relativePath": "home/.npm",
+        "type": "directory"
       },
       {
         "displayName": "Paquetes npm globales",
         "base": "profile",
-        "relativePath": "home/.npm-global"
+        "relativePath": "home/.npm-global",
+        "type": "directory"
       },
       {
         "displayName": "Configuración npm (.npmrc)",
         "base": "profile",
-        "relativePath": "home/.npmrc"
+        "relativePath": "home/.npmrc",
+        "type": "file"
       },
       {
         "displayName": "Caché Corepack",
         "base": "profile",
-        "relativePath": "home/.cache/node/corepack"
+        "relativePath": "home/.cache/node/corepack",
+        "type": "directory"
       }
     ]
   },
