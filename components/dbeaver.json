@@ -69,12 +69,12 @@
   },
   "tracks": [
     {
-      "id": "26.1",
-      "displayName": "DBeaver 26.1 estable"
+      "id": 26,
+      "displayName": "DBeaver 26.x estable"
     }
   ],
   "defaultProvider": "community",
-  "defaultTrack": "26.1",
+  "defaultTrack": 26,
   "updatePolicy": "same-track",
   "providers": [
     {
