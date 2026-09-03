@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 3,
+  "id": "golang",
+  "displayName": "Go",
+  "description": "Toolchain oficial de Go portable para Windows",
+  "category": "runtimes",
+  "kind": "runtime",
+  "info": {
+    "description": "Go mantiene el workspace, la caché de compilación, los módulos y la configuración dentro del profile activo.",
+    "paths": [
+      {
+        "displayName": "Workspace y binarios de Go",
+        "base": "profile",
+        "relativePath": "home/go",
+        "type": "directory"
+      },
+      {
+        "displayName": "Caché de compilación",
+        "base": "profile",
+        "relativePath": "home/.cache/go-build",
+        "type": "directory"
+      },
+      {
+        "displayName": "Configuración de Go",
+        "base": "profile",
+        "relativePath": "components/golang/go.env",
+        "type": "file"
+      }
+    ]
+  },
+  "launchers": [],
+  "capability": {
+    "id": "runtime.go",
+    "exclusive": true
+  },
+  "platform": {
+    "os": "windows",
+    "architecture": "x64",
+    "archiveType": "zip"
+  },
+  "tracks": [
+    {
+      "id": "1.26",
+      "displayName": "Go 1.26"
+    },
+    {
+      "id": "1.27",
+      "displayName": "Go 1.27"
+    }
+  ],
+  "defaultProvider": "go-dev",
+  "defaultTrack": "1.27",
+  "updatePolicy": "same-track",
+  "providers": [
+    {
+      "id": "go-dev",
+      "componentId": "golang-official",
+      "displayName": "Go oficial",
+      "vendor": "The Go Authors",
+      "license": "BSD-3-Clause",
+      "homepage": "https://go.dev/",
+      "resolver": {
+        "type": "golang-downloads-index",
+        "indexUrl": "https://go.dev/dl/?mode=json",
+        "downloadBaseUrl": "https://go.dev/dl"
+      },
+      "verification": {
+        "checksumAlgorithm": "sha256",
+        "source": "Índice oficial de descargas de Go"
+      }
+    }
+  ],
+  "install": {
+    "directoryTemplate": "golang/{provider}/{version}",
+    "stripSingleRoot": true,
+    "requiredFiles": [
+      "bin/go.exe",
+      "bin/gofmt.exe",
+      "VERSION"
+    ],
+    "validation": {
+      "type": "command",
+      "command": [
+        "bin/go.exe",
+        "version"
+      ],
+      "expectContains": "go version",
+      "timeoutSeconds": 30
+    }
+  },
+  "data": {
+    "directories": [
+      {
+        "path": "{{profile.home}}/go/bin",
+        "displayName": "Binarios instalados con Go",
+        "role": "repository",
+        "showInDashboard": true
+      },
+      {
+        "path": "{{profile.home}}/go/pkg/mod",
+        "displayName": "Caché de módulos Go",
+        "role": "cache",
+        "showInDashboard": false
+      },
+      {
+        "path": "{{profile.home}}/.cache/go-build",
+        "displayName": "Caché de compilación Go",
+        "role": "cache",
+        "showInDashboard": false
+      }
+    ],
+    "files": [
+      {
+        "path": "{{data.component}}/go.env",
+        "displayName": "Configuración de Go",
+        "role": "configuration",
+        "showInDashboard": true,
+        "mode": "if-missing",
+        "content": ""
+      }
+    ]
+  },
+  "environment": {
+    "variables": {
+      "GOROOT": "{{component.root}}",
+      "GOPATH": "{{profile.home}}/go",
+      "GOCACHE": "{{profile.home}}/.cache/go-build",
+      "GOMODCACHE": "{{profile.home}}/go/pkg/mod",
+      "GOENV": "{{data.component}}/go.env",
+      "GOTOOLCHAIN": "local"
+    },
+    "unset": [
+      "GOBIN"
+    ],
+    "path": [
+      "{{component.root}}/bin"
+    ],
+    "dataPath": [
+      "{{profile.home}}/go/bin"
+    ]
+  }
+}

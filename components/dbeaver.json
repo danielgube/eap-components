@@ -76,6 +76,7 @@
   "defaultProvider": "community",
   "defaultTrack": 26,
   "updatePolicy": "same-track",
+  "majorUpdates": "confirm-component-name",
   "providers": [
     {
       "id": "community",

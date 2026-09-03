@@ -236,6 +236,7 @@ Para adaptar el ejemplo hay que cambiar, como mínimo:
 | `defaultProvider` | Sí | ID de un proveedor declarado. |
 | `defaultTrack` | Sí | ID de una línea declarada. |
 | `updatePolicy` | Sí | `same-track` o `manual`. |
+| `majorUpdates` | No | `confirm-component-name` para ofrecer líneas mayores con confirmación reforzada. |
 | `providers` | Sí | Uno o más proveedores. |
 | `install` | Sí | Contrato de instalación o vinculación. |
 | `data` | Opcional | Directorios y archivos mutables del profile. |
@@ -311,6 +312,23 @@ de la versión deben comenzar por los grupos de la línea:
 `same-track` permite buscar actualizaciones dentro de la misma línea. Use
 `manual` para componentes vinculados o sin actualización automática.
 
+Los componentes que puedan avanzar entre versiones mayores pueden declarar:
+
+```json
+"majorUpdates": "confirm-component-name"
+```
+
+En ese caso cada track debe ser un entero positivo que represente exactamente
+la versión mayor (`26`, `27`, etc.). EAP ofrece las actualizaciones patch y
+minor de la línea activa de forma normal. Cuando el catálogo publique una
+línea mayor nueva, también la ofrece, pero muestra un aviso de compatibilidad y
+exige escribir el ID del componente para instalarla. Añada el nuevo track sólo
+después de validar la release y sus recomendaciones de migración.
+
+No active esta política para runtimes cuyo major forma parte del contrato del
+proyecto, como Java, Go, PHP, Node.js o Python, ni para herramientas que deban
+permanecer fijadas a una línea de compatibilidad.
+
 ## 6. Proveedores y resolución de versiones
 
 Cada proveedor contiene como mínimo:
@@ -362,6 +380,8 @@ Comportamiento:
 | `corretto-index` | JDK de Amazon Corretto | `indexUrl`, `resourceBaseUrl` |
 | `apache-directory` | Estructura de Maven en Apache Downloads | `indexUrl`, `downloadBaseUrl` |
 | `nodejs-index` | Índice oficial de Node.js | `indexUrl`, `downloadBaseUrl` |
+| `golang-downloads-index` | Índice oficial de descargas de Go | `indexUrl`, `downloadBaseUrl` |
+| `php-windows-releases` | Releases oficiales de PHP para Windows | `indexUrl`, `downloadBaseUrl`; opcionales `threadSafety` (`nts`), `architecture` (`x64`) |
 | `python-install-manager-index` | Índice Windows de Python Install Manager | `indexUrl`; opcionales `company`, `architectureTag` |
 | `vscode-update-api` | API de actualización de VS Code | `updateUrl` |
 | `external-executable` | Programa ya instalado en el host | Sin campos adicionales; sólo para `kind: external` |
@@ -794,6 +814,8 @@ Para actualizar uno existente:
 
 - no cambie su ID ni los IDs de proveedor sin una migración;
 - añada un track cuando aparezca una nueva línea compatible;
+- para `majorUpdates`, publique el track mayor sólo después de revisar la
+  release y sus posibles incompatibilidades;
 - cambie `defaultTrack` sólo después de probarla;
 - no fije una versión concreta si el resolver ya obtiene la última corrección;
 - aumente `maxExtractBytes` únicamente cuando el tamaño real lo justifique;

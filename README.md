@@ -7,7 +7,7 @@ Cada componente se declara mediante un manifiesto JSON dentro de
 EAP obtiene siempre una revisión inmutable del repositorio, valida todos los
 manifiestos y conserva una copia local antes de activarla.
 
-Los manifiestos actuales usan `schemaVersion: 2` y declaran obligatoriamente un
+Los manifiestos actuales usan `schemaVersion: 3` y declaran obligatoriamente un
 bloque `info` con una descripción breve y las rutas importantes relativas al
 profile o al workspace. EAP resuelve esas rutas de forma absoluta tanto en la
 pantalla principal como antes de instalar el componente.
@@ -18,6 +18,8 @@ pantalla principal como antes de instalar el componente.
 catalog.json
 components/
   java.json
+  golang.json
+  php.json
   maven.json
   ...
 ```
@@ -25,7 +27,7 @@ components/
 En esta primera versión los manifiestos sólo pueden utilizar resolvers y
 validadores incluidos en EAP. Los adaptadores ejecutables externos se añadirán
 posteriormente mediante una API versionada y aislada; el catálogo no admite
-Python remoto todavía.
+código Python remoto.
 
 ## Uso
 

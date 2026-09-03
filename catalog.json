@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "catalogVersion": "1.2.0",
+  "catalogVersion": "1.4.0",
   "components": [
     {
       "id": "java",
@@ -21,6 +21,14 @@
     {
       "id": "python",
       "manifest": "components/python.json"
+    },
+    {
+      "id": "golang",
+      "manifest": "components/golang.json"
+    },
+    {
+      "id": "php",
+      "manifest": "components/php.json"
     },
     {
       "id": "bruno",

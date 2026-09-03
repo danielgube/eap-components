@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 3,
+  "id": "php",
+  "displayName": "PHP",
+  "description": "Runtime PHP oficial NTS portable para Windows",
+  "category": "runtimes",
+  "kind": "runtime",
+  "info": {
+    "description": "PHP usa la distribución oficial NTS x64 para CLI y FastCGI. Su configuración, sesiones y datos de Composer quedan aislados en el profile; el host necesita el Microsoft Visual C++ Redistributable 2015-2022 x64.",
+    "paths": [
+      {
+        "displayName": "Configuración PHP",
+        "base": "profile",
+        "relativePath": "components/php/php.ini",
+        "type": "file"
+      },
+      {
+        "displayName": "Configuración adicional PHP",
+        "base": "profile",
+        "relativePath": "components/php/conf.d",
+        "type": "directory"
+      },
+      {
+        "displayName": "Datos de Composer",
+        "base": "profile",
+        "relativePath": "home/.composer",
+        "type": "directory"
+      }
+    ]
+  },
+  "launchers": [],
+  "capability": {
+    "id": "runtime.php",
+    "exclusive": true
+  },
+  "platform": {
+    "os": "windows",
+    "architecture": "x64",
+    "archiveType": "zip"
+  },
+  "tracks": [
+    {
+      "id": "8.2",
+      "displayName": "PHP 8.2"
+    },
+    {
+      "id": "8.3",
+      "displayName": "PHP 8.3"
+    },
+    {
+      "id": "8.4",
+      "displayName": "PHP 8.4"
+    },
+    {
+      "id": "8.5",
+      "displayName": "PHP 8.5"
+    }
+  ],
+  "defaultProvider": "php-windows",
+  "defaultTrack": "8.5",
+  "updatePolicy": "same-track",
+  "providers": [
+    {
+      "id": "php-windows",
+      "componentId": "php-windows-official",
+      "displayName": "PHP oficial · NTS x64",
+      "vendor": "The PHP Group",
+      "license": "PHP-3.01",
+      "homepage": "https://www.php.net/",
+      "resolver": {
+        "type": "php-windows-releases",
+        "indexUrl": "https://windows.php.net/downloads/releases/releases.json",
+        "downloadBaseUrl": "https://downloads.php.net/~windows/releases",
+        "threadSafety": "nts",
+        "architecture": "x64"
+      },
+      "verification": {
+        "checksumAlgorithm": "sha256",
+        "source": "Índice oficial de releases de PHP para Windows"
+      }
+    }
+  ],
+  "install": {
+    "directoryTemplate": "php/{provider}/{version}",
+    "stripSingleRoot": false,
+    "requiredFiles": [
+      "php.exe",
+      "php-cgi.exe",
+      "php.ini-development",
+      "ext/php_openssl.dll"
+    ],
+    "validation": {
+      "type": "command",
+      "command": [
+        "php.exe",
+        "--version"
+      ],
+      "expectContains": "PHP",
+      "timeoutSeconds": 30
+    }
+  },
+  "data": {
+    "directories": [
+      {
+        "path": "{{data.component}}/conf.d",
+        "displayName": "Configuración adicional PHP",
+        "role": "configuration",
+        "showInDashboard": false
+      },
+      {
+        "path": "{{data.component}}/sessions",
+        "displayName": "Sesiones PHP",
+        "role": "data",
+        "showInDashboard": false
+      },
+      {
+        "path": "{{profile.home}}/.composer",
+        "displayName": "Datos de Composer",
+        "role": "repository",
+        "showInDashboard": true
+      },
+      {
+        "path": "{{profile.home}}/.cache/composer",
+        "displayName": "Caché de Composer",
+        "role": "cache",
+        "showInDashboard": false
+      }
+    ],
+    "files": [
+      {
+        "path": "{{data.component}}/php.ini",
+        "displayName": "php.ini",
+        "role": "configuration",
+        "showInDashboard": true,
+        "mode": "if-missing",
+        "content": "[PHP]\nextension_dir = \"{{component.root}}/ext\"\nsys_temp_dir = \"{{profile.temp}}\"\nupload_tmp_dir = \"{{profile.temp}}\"\nsession.save_path = \"{{data.component}}/sessions\"\n"
+      }
+    ]
+  },
+  "environment": {
+    "variables": {
+      "PHPRC": "{{data.component}}",
+      "PHP_INI_SCAN_DIR": "{{data.component}}/conf.d",
+      "COMPOSER_HOME": "{{profile.home}}/.composer",
+      "COMPOSER_CACHE_DIR": "{{profile.home}}/.cache/composer"
+    },
+    "path": [
+      "{{component.root}}"
+    ]
+  }
+}
