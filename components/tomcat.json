@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 3,
+  "id": "tomcat",
+  "displayName": "Apache Tomcat",
+  "description": "Servidor de aplicaciones web Apache Tomcat para integración con IDEs y Pocketools",
+  "category": "servers",
+  "kind": "server",
+  "info": {
+    "description": "Tomcat se instala como un servidor portable para IDEs y Pocketools. EAP no gestiona instancias, puertos, despliegues ni procesos del servidor.",
+    "paths": [
+      {
+        "displayName": "Datos de integraciones Tomcat",
+        "base": "profile",
+        "relativePath": "components/tomcat",
+        "type": "directory"
+      }
+    ]
+  },
+  "launchers": [],
+  "capability": {
+    "id": "server.tomcat",
+    "exclusive": true
+  },
+  "platform": {
+    "os": "windows",
+    "architecture": "any",
+    "archiveType": "zip"
+  },
+  "tracks": [
+    {
+      "id": 9,
+      "displayName": "Tomcat 9 · Java EE 8 · Java 8+"
+    },
+    {
+      "id": 10,
+      "displayName": "Tomcat 10.1 · Jakarta EE 10 · Java 11+"
+    },
+    {
+      "id": 11,
+      "displayName": "Tomcat 11 · Jakarta EE 11 · Java 17+"
+    }
+  ],
+  "defaultProvider": "apache",
+  "defaultTrack": 11,
+  "updatePolicy": "same-track",
+  "providers": [
+    {
+      "id": "apache",
+      "componentId": "apache-tomcat",
+      "displayName": "Apache Software Foundation",
+      "vendor": "Apache Software Foundation",
+      "license": "Apache-2.0",
+      "homepage": "https://tomcat.apache.org/",
+      "resolver": {
+        "type": "html-directory",
+        "indexUrl": "https://downloads.apache.org/tomcat/tomcat-{track}/",
+        "releasePattern": "href=[\"']v(?P<version>\\d+\\.\\d+\\.\\d+)/[\"']",
+        "artifactUrlTemplate": "https://downloads.apache.org/tomcat/tomcat-{track}/v{version}/bin/apache-tomcat-{version}.zip",
+        "checksumUrlTemplate": "{artifactUrl}.sha512",
+        "checksumAlgorithm": "sha512"
+      },
+      "verification": {
+        "checksumAlgorithm": "sha512",
+        "source": "Apache release checksum"
+      }
+    }
+  ],
+  "install": {
+    "directoryTemplate": "tomcat/{provider}/{version}",
+    "stripSingleRoot": true,
+    "maxExtractBytes": 268435456,
+    "requiredFiles": [
+      "bin/catalina.bat",
+      "bin/startup.bat",
+      "bin/shutdown.bat",
+      "bin/version.bat",
+      "conf/server.xml",
+      "conf/catalina.properties",
+      "lib/catalina.jar",
+      "RELEASE-NOTES",
+      "RUNNING.txt"
+    ],
+    "validation": {
+      "type": "files-only"
+    }
+  },
+  "data": {
+    "directories": [
+      {
+        "path": "{{data.component}}",
+        "displayName": "Datos de integraciones Tomcat",
+        "role": "data",
+        "showInDashboard": true
+      }
+    ],
+    "files": []
+  },
+  "environment": {
+    "variables": {
+      "CATALINA_HOME": "{{component.root}}"
+    },
+    "unset": [
+      "CATALINA_BASE"
+    ],
+    "path": []
+  }
+}

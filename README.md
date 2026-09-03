@@ -18,6 +18,7 @@ pantalla principal como antes de instalar el componente.
 catalog.json
 components/
   java.json
+  tomcat.json
   golang.json
   php.json
   maven.json

@@ -56,9 +56,12 @@
       "license": "Apache-2.0",
       "homepage": "https://maven.apache.org/",
       "resolver": {
-        "type": "apache-directory",
+        "type": "html-directory",
         "indexUrl": "https://downloads.apache.org/maven/maven-3/",
-        "downloadBaseUrl": "https://downloads.apache.org/maven/maven-3"
+        "releasePattern": "href=[\"'](?P<version>\\d+\\.\\d+\\.\\d+)/[\"']",
+        "artifactUrlTemplate": "https://downloads.apache.org/maven/maven-3/{version}/binaries/apache-maven-{version}-bin.zip",
+        "checksumUrlTemplate": "{artifactUrl}.sha512",
+        "checksumAlgorithm": "sha512"
       },
       "verification": {
         "checksumAlgorithm": "sha512"

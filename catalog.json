@@ -1,10 +1,14 @@
 {
   "schemaVersion": 1,
-  "catalogVersion": "1.5.0",
+  "catalogVersion": "1.6.0",
   "components": [
     {
       "id": "java",
       "manifest": "components/java.json"
+    },
+    {
+      "id": "tomcat",
+      "manifest": "components/tomcat.json"
     },
     {
       "id": "maven",

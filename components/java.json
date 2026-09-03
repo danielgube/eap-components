@@ -102,6 +102,9 @@
       "JAVA_HOME": "{{component.root}}",
       "JAVA_TOOL_OPTIONS": "-Duser.home=\"{{profile.home}}\" -Djava.io.tmpdir=\"{{profile.temp}}\""
     },
+    "appendable": [
+      "JAVA_TOOL_OPTIONS"
+    ],
     "path": [
       "{{component.root}}/bin"
     ]

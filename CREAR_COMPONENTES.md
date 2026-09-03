@@ -227,7 +227,7 @@ Para adaptar el ejemplo hay que cambiar, como mínimo:
 | `displayName` | Sí | Nombre visible para el usuario. |
 | `description` | Recomendado | Descripción breve. |
 | `category` | Opcional | Agrupación informativa, por ejemplo `applications`. |
-| `kind` | Sí | `application`, `external`, `runtime`, `service` o `tool`. |
+| `kind` | Sí | `application`, `external`, `runtime`, `server`, `service` o `tool`. |
 | `info` | Sí | Descripción breve y rutas importantes relativas. |
 | `launchers` | Sí | Lista; puede estar vacía salvo para `external`. |
 | `capability` | Recomendado | Capacidad que otras herramientas pueden requerir. |
@@ -243,6 +243,11 @@ Para adaptar el ejemplo hay que cambiar, como mínimo:
 | `data` | Opcional | Directorios y archivos mutables del profile. |
 | `environment` | Sí | Variables, PATH y comandos publicados. |
 | `requires` | Opcional | Dependencias informativas de componentes. |
+
+`server` es una clasificación informativa. EAP lo instala, activa y actualiza
+como un runtime; sólo tendrá una acción Run si el manifiesto declara launchers.
+La gestión de instancias, puertos o procesos debe permanecer en un launcher o
+una Pocketool explícitos.
 
 ### 5.2 Información y rutas importantes
 
@@ -384,7 +389,8 @@ Comportamiento:
 | `eclipse-epp-release` | Paquetes Eclipse EPP | `downloadBaseUrl`, `packageName`, `releaseBuild` opcional (`R`) |
 | `adoptium-v3` | JDK de Adoptium | `baseUrl`; opcionales `vendor`, `jvmImpl` |
 | `corretto-index` | JDK de Amazon Corretto | `indexUrl`, `resourceBaseUrl` |
-| `apache-directory` | Estructura de Maven en Apache Downloads | `indexUrl`, `downloadBaseUrl` |
+| `html-directory` | Directorio HTML con ZIP y checksum separado | `indexUrl`, `releasePattern`, plantillas de artefacto y checksum |
+| `apache-directory` | Resolver antiguo de Maven; sólo compatibilidad | `indexUrl`, `downloadBaseUrl` |
 | `nodejs-index` | Índice oficial de Node.js | `indexUrl`, `downloadBaseUrl` |
 | `json-index` | API JSON declarativa con selección de release, artefacto y checksum | `indexUrl`, `releases`, `artifacts` |
 | `python-install-manager-index` | Índice Windows de Python Install Manager | `indexUrl`; opcionales `company`, `architectureTag` |
@@ -392,8 +398,9 @@ Comportamiento:
 | `external-executable` | Programa ya instalado en el host | Sin campos adicionales; sólo para `kind: external` |
 
 Los resolvers específicos están ligados a la estructura concreta indicada. Use
-`json-index` para una API JSON nueva; copie otro bloque sólo si el producto usa
-exactamente la misma API.
+`json-index` para una API JSON y `html-directory` para un índice HTML con
+checksum separado; copie otro bloque sólo si el producto usa exactamente la
+misma API.
 
 ### 6.3 Resolver JSON declarativo
 
@@ -449,9 +456,37 @@ usar `json-index`.
 Esto permite que un repositorio externo publique componentes como Go o PHP sin
 un cambio previo en el código de EAP. La frontera sigue siendo deliberadamente
 segura: la fuente debe ser una API JSON HTTPS, el artefacto un ZIP y el checksum
-debe estar disponible en esa respuesta. Un formato distinto (HTML, instalador,
-checksum en otro documento o autenticación especial) todavía necesita ampliar
-un resolver genérico o incorporar un adaptador auditado en EAP.
+debe estar disponible en esa respuesta.
+
+### 6.4 Directorio HTML declarativo
+
+`html-directory` cubre repositorios que publican versiones mediante enlaces
+HTML y el checksum en un documento independiente:
+
+```json
+"resolver": {
+  "type": "html-directory",
+  "indexUrl": "https://downloads.example.org/product-{track}/",
+  "releasePattern": "href=[\"']v?(?P<version>\\d+\\.\\d+\\.\\d+)/[\"']",
+  "artifactUrlTemplate": "https://downloads.example.org/product-{track}/v{version}/bin/product-{version}.zip",
+  "checksumUrlTemplate": "{artifactUrl}.sha512",
+  "checksumAlgorithm": "sha512"
+}
+```
+
+- `releasePattern` debe capturar `(?P<version>...)`.
+- Las plantillas sólo aceptan HTTPS y los tokens documentados.
+- `checksumAlgorithm` admite `sha256` o `sha512`.
+- El artefacto final debe ser un ZIP y pertenecer al track solicitado.
+- `{track}` y `{version}` están disponibles en las URL; la plantilla del
+  checksum también admite `{artifactUrl}` y `{fileName}`.
+
+Maven y Tomcat usan este contrato. `apache-directory` permanece disponible
+para no romper manifiestos de Maven publicados con versiones anteriores.
+
+Formatos distintos, instaladores, autenticación especial o páginas que no
+expongan una versión estable todavía necesitan ampliar un resolver genérico o
+incorporar un adaptador auditado en EAP.
 
 `verification` es obligatorio y documenta el origen de la verificación. Los
 resolvers obtienen el checksum desde su fuente oficial. `java-release` también
@@ -592,8 +627,10 @@ identidad portable del profile, como `HOME`, `USERPROFILE`, `APPDATA`,
 ```json
 "environment": {
   "variables": {
-    "PRODUCTO_HOME": "{{component.root}}"
+    "PRODUCTO_HOME": "{{component.root}}",
+    "PRODUCTO_OPTIONS": "--profile={{profile.id}}"
   },
+  "appendable": ["PRODUCTO_OPTIONS"],
   "unset": [],
   "path": [
     "{{component.root}}/bin"
@@ -604,6 +641,9 @@ identidad portable del profile, como `HOME`, `USERPROFILE`, `APPDATA`,
 ```
 
 - `variables` y `path` son obligatorios, aunque estén vacíos.
+- `appendable` permite que un valor `env.NOMBRE` del usuario se anteponga,
+  separado por un espacio, al valor gestionado por el componente. La parte de
+  EAP queda al final y tiene precedencia cuando una opción se repite.
 - Cada entrada de `path` debe resolverse dentro de la instalación.
 - `dataPath` crea rutas mutables dentro del profile y las añade a `PATH`.
 - `unset` elimina primero cualquier variante mayúscula/minúscula de la variable.
