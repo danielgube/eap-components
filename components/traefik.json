@@ -42,16 +42,13 @@
       "license": "MIT",
       "homepage": "https://traefik.io/",
       "resolver": {
-        "type": "github-release",
-        "repo": "traefik/traefik",
-        "releasePattern": "^v(?P<version>\\d+\\.\\d+\\.\\d+)$",
-        "artifactUrlTemplate": "https://github.com/traefik/traefik/releases/download/v{version}/traefik_v{version}_windows_amd64.zip",
-        "checksumUrlTemplate": "https://github.com/traefik/traefik/releases/download/v{version}/traefik_v{version}_checksums.txt",
-        "checksumAlgorithm": "sha256"
+        "type": "github-release-asset",
+        "apiUrl": "https://api.github.com/repos/traefik/traefik/releases?per_page=100",
+        "assetPattern": "^traefik_v(?P<version>\\d+\\.\\d+\\.\\d+)_windows_amd64\\.zip$"
       },
       "verification": {
         "checksumAlgorithm": "sha256",
-        "source": "Traefik release checksums (fichero agregado, un hash por línea)"
+        "source": "GitHub release asset digest"
       }
     }
   ],
