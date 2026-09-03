@@ -47,6 +47,9 @@
   "defaultProvider": "temurin",
   "defaultTrack": 21,
   "updatePolicy": "same-track",
+  "versioning": {
+    "scheme": "java"
+  },
   "providers": [
     {
       "id": "temurin",

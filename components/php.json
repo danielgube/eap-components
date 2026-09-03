@@ -68,11 +68,19 @@
       "license": "PHP-3.01",
       "homepage": "https://www.php.net/",
       "resolver": {
-        "type": "php-windows-releases",
+        "type": "json-index",
         "indexUrl": "https://windows.php.net/downloads/releases/releases.json",
-        "downloadBaseUrl": "https://downloads.php.net/~windows/releases",
-        "threadSafety": "nts",
-        "architecture": "x64"
+        "releases": {
+          "path": "/{track}",
+          "versionPath": "/version"
+        },
+        "artifacts": {
+          "path": "/nts-vs*-x64/zip",
+          "selection": "last",
+          "fileNamePath": "/path",
+          "urlTemplate": "https://downloads.php.net/~windows/releases/{fileName}",
+          "sha256Path": "/sha256"
+        }
       },
       "verification": {
         "checksumAlgorithm": "sha256",

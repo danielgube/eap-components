@@ -60,9 +60,28 @@
       "license": "BSD-3-Clause",
       "homepage": "https://go.dev/",
       "resolver": {
-        "type": "golang-downloads-index",
+        "type": "json-index",
         "indexUrl": "https://go.dev/dl/?mode=json",
-        "downloadBaseUrl": "https://go.dev/dl"
+        "releases": {
+          "path": "/",
+          "versionPath": "/version",
+          "versionPattern": "^go(?P<version>\\d+\\.\\d+\\.\\d+)$",
+          "filters": {
+            "/stable": true
+          }
+        },
+        "artifacts": {
+          "path": "/files",
+          "filters": {
+            "/os": "windows",
+            "/arch": "amd64",
+            "/kind": "archive"
+          },
+          "fileNamePath": "/filename",
+          "urlTemplate": "https://go.dev/dl/{fileName}",
+          "sha256Path": "/sha256",
+          "sizePath": "/size"
+        }
       },
       "verification": {
         "checksumAlgorithm": "sha256",

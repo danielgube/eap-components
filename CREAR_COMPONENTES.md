@@ -2,7 +2,7 @@
 
 Esta guía permite añadir un componente sin conocer el código fuente de EAP.
 Describe el contrato público de los manifiestos de componentes para el esquema
-`schemaVersion: 2`, sus límites actuales y el proceso completo de prueba y
+`schemaVersion: 3`, sus límites actuales y el proceso completo de prueba y
 publicación.
 
 ## 1. Qué es un componente
@@ -100,7 +100,7 @@ Es el punto de partida recomendado para la mayoría de aplicaciones portables.
 
 ```json
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "mi-cliente",
   "displayName": "Mi Cliente",
   "description": "Cliente portable de ejemplo",
@@ -222,7 +222,7 @@ Para adaptar el ejemplo hay que cambiar, como mínimo:
 
 | Campo | Obligatorio | Contrato |
 |---|---:|---|
-| `schemaVersion` | Sí | Debe valer `2`; EAP sólo conserva lectura compatible de manifiestos `1`. |
+| `schemaVersion` | Sí | Debe valer `3`; EAP conserva lectura compatible de manifiestos `1` y `2`. |
 | `id` | Sí | Identificador estable; debe coincidir con catálogo y archivo. |
 | `displayName` | Sí | Nombre visible para el usuario. |
 | `description` | Recomendado | Descripción breve. |
@@ -236,6 +236,7 @@ Para adaptar el ejemplo hay que cambiar, como mínimo:
 | `defaultProvider` | Sí | ID de un proveedor declarado. |
 | `defaultTrack` | Sí | ID de una línea declarada. |
 | `updatePolicy` | Sí | `same-track` o `manual`. |
+| `versioning` | No | Comparación de versiones; `scheme` puede ser `numeric` (por defecto) o `java`. |
 | `majorUpdates` | No | `confirm-component-name` para ofrecer líneas mayores con confirmación reforzada. |
 | `providers` | Sí | Uno o más proveedores. |
 | `install` | Sí | Contrato de instalación o vinculación. |
@@ -312,6 +313,11 @@ de la versión deben comenzar por los grupos de la línea:
 `same-track` permite buscar actualizaciones dentro de la misma línea. Use
 `manual` para componentes vinculados o sin actualización automática.
 
+La comparación normal extrae y compara numéricamente los grupos de la versión.
+Las distribuciones Java pueden declarar `"versioning": {"scheme": "java"}`
+para aplicar su orden de release y build sin que EAP dependa del ID `java` ni de
+un nombre de componente concreto.
+
 Los componentes que puedan avanzar entre versiones mayores pueden declarar:
 
 ```json
@@ -380,15 +386,72 @@ Comportamiento:
 | `corretto-index` | JDK de Amazon Corretto | `indexUrl`, `resourceBaseUrl` |
 | `apache-directory` | Estructura de Maven en Apache Downloads | `indexUrl`, `downloadBaseUrl` |
 | `nodejs-index` | Índice oficial de Node.js | `indexUrl`, `downloadBaseUrl` |
-| `golang-downloads-index` | Índice oficial de descargas de Go | `indexUrl`, `downloadBaseUrl` |
-| `php-windows-releases` | Releases oficiales de PHP para Windows | `indexUrl`, `downloadBaseUrl`; opcionales `threadSafety` (`nts`), `architecture` (`x64`) |
+| `json-index` | API JSON declarativa con selección de release, artefacto y checksum | `indexUrl`, `releases`, `artifacts` |
 | `python-install-manager-index` | Índice Windows de Python Install Manager | `indexUrl`; opcionales `company`, `architectureTag` |
 | `vscode-update-api` | API de actualización de VS Code | `updateUrl` |
 | `external-executable` | Programa ya instalado en el host | Sin campos adicionales; sólo para `kind: external` |
 
-Los resolvers salvo GitHub están ligados a la estructura concreta indicada. No
-son plantillas HTTP genéricas. Copie el bloque de un componente existente sólo
-si el nuevo producto usa exactamente la misma API.
+Los resolvers específicos están ligados a la estructura concreta indicada. Use
+`json-index` para una API JSON nueva; copie otro bloque sólo si el producto usa
+exactamente la misma API.
+
+### 6.3 Resolver JSON declarativo
+
+`json-index` permite integrar una API JSON nueva sin modificar EAP ni ejecutar
+código procedente del catálogo. Sólo admite selección de datos, filtros escalares,
+una expresión regular para normalizar la versión y plantillas HTTPS limitadas.
+
+```json
+"resolver": {
+  "type": "json-index",
+  "indexUrl": "https://example.org/releases.json?track={track}",
+  "releases": {
+    "path": "/releases",
+    "versionPath": "/name",
+    "versionPattern": "^v(?P<version>\\d+\\.\\d+\\.\\d+)$",
+    "filters": {
+      "/stable": true
+    }
+  },
+  "artifacts": {
+    "path": "/files",
+    "filters": {
+      "/os": "windows",
+      "/arch": "x64",
+      "/type": "archive"
+    },
+    "fileNamePath": "/name",
+    "urlPath": "/url",
+    "sha256Path": "/sha256",
+    "sizePath": "/size"
+  }
+}
+```
+
+Las rutas usan un subconjunto seguro de JSON Pointer:
+
+- `/` representa el documento u objeto actual.
+- Cada segmento navega por una propiedad; `~1` representa `/` y `~0`, `~`.
+- `*` permite seleccionar elementos o claves coincidentes. Si quedan varios
+  artefactos, `selection` debe ser `first` o `last`; el valor predeterminado
+  `only` rechaza una selección ambigua.
+- `{track}` está disponible en `indexUrl`, rutas y filtros. Las plantillas de URL
+  también admiten `{version}` y `{fileName}`.
+- `versionPattern`, cuando se usa, debe incluir `(?P<version>...)`.
+- `artifacts` debe declarar exactamente un origen de URL (`urlPath` o
+  `urlTemplate`) y un checksum (`sha256Path` o `sha512Path`). El resultado debe
+  ser un ZIP HTTPS con un checksum válido.
+
+Los antiguos tipos específicos de Go y PHP siguen siendo aceptados por EAP para
+compatibilidad con revisiones ya publicadas, pero los componentes nuevos deben
+usar `json-index`.
+
+Esto permite que un repositorio externo publique componentes como Go o PHP sin
+un cambio previo en el código de EAP. La frontera sigue siendo deliberadamente
+segura: la fuente debe ser una API JSON HTTPS, el artefacto un ZIP y el checksum
+debe estar disponible en esa respuesta. Un formato distinto (HTML, instalador,
+checksum en otro documento o autenticación especial) todavía necesita ampliar
+un resolver genérico o incorporar un adaptador auditado en EAP.
 
 `verification` es obligatorio y documenta el origen de la verificación. Los
 resolvers obtienen el checksum desde su fuente oficial. `java-release` también
@@ -673,7 +736,7 @@ o instalar:
 
 ```json
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "producto-externo",
   "displayName": "Producto Externo",
   "kind": "external",
@@ -860,7 +923,7 @@ nuevo o sustituya temporalmente la URL de la misma fuente durante las pruebas.
 ## 17. Checklist antes de una pull request
 
 - [ ] El ID coincide en carpeta, archivo, manifiesto y catálogo.
-- [ ] `schemaVersion` es `2`.
+- [ ] `schemaVersion` es `3`.
 - [ ] `catalogVersion` se ha incrementado.
 - [ ] Proveedor y track predeterminados existen.
 - [ ] El resolver es compatible y todas las URLs son HTTPS.
