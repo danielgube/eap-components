@@ -10,6 +10,10 @@
       "id": "tomcat",
       "manifest": "components/tomcat.json"
     },
+	{
+      "id": "traefik",
+      "manifest": "components/traefik.json"
+    },
     {
       "id": "maven",
       "manifest": "components/maven.json"
