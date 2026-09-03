@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 3,
+  "id": "traefik",
+  "displayName": "Traefik",
+  "description": "Proxy inverso y balanceador de carga Traefik para integración con IDEs y Pocketools",
+  "category": "servers",
+  "kind": "server",
+  "info": {
+    "description": "Traefik se instala como un binario portable para IDEs y Pocketools. EAP no gestiona instancias, puertos, reglas de enrutado ni procesos del servidor.",
+    "paths": [
+      {
+        "displayName": "Datos de integraciones Traefik",
+        "base": "profile",
+        "relativePath": "components/traefik",
+        "type": "directory"
+      }
+    ]
+  },
+  "launchers": [],
+  "capability": {
+    "id": "server.traefik",
+    "exclusive": true
+  },
+  "platform": {
+    "os": "windows",
+    "architecture": "amd64",
+    "archiveType": "zip"
+  },
+  "tracks": [
+    { "id": 2, "displayName": "Traefik 2.x · config legacy" },
+    { "id": 3, "displayName": "Traefik 3.x · última generación" }
+  ],
+  "defaultProvider": "traefiklabs",
+  "defaultTrack": 3,
+  "updatePolicy": "same-track",
+  "providers": [
+    {
+      "id": "traefiklabs",
+      "componentId": "traefik",
+      "displayName": "Traefik Labs",
+      "vendor": "Traefik Labs",
+      "license": "MIT",
+      "homepage": "https://traefik.io/",
+      "resolver": {
+        "type": "github-release",
+        "repo": "traefik/traefik",
+        "releasePattern": "^v(?P<version>\\d+\\.\\d+\\.\\d+)$",
+        "artifactUrlTemplate": "https://github.com/traefik/traefik/releases/download/v{version}/traefik_v{version}_windows_amd64.zip",
+        "checksumUrlTemplate": "https://github.com/traefik/traefik/releases/download/v{version}/traefik_v{version}_checksums.txt",
+        "checksumAlgorithm": "sha256"
+      },
+      "verification": {
+        "checksumAlgorithm": "sha256",
+        "source": "Traefik release checksums (fichero agregado, un hash por línea)"
+      }
+    }
+  ],
+  "install": {
+    "directoryTemplate": "traefik/{provider}/{version}",
+    "stripSingleRoot": false,
+    "maxExtractBytes": 209715200,
+    "requiredFiles": [
+      "traefik.exe",
+      "LICENSE.md",
+      "CHANGELOG.md"
+    ],
+    "validation": {
+      "type": "files-only"
+    }
+  },
+  "data": {
+    "directories": [
+      {
+        "path": "{{data.component}}",
+        "displayName": "Datos de integraciones Traefik",
+        "role": "data",
+        "showInDashboard": true
+      }
+    ],
+    "files": []
+  },
+  "environment": {
+    "variables": {},
+    "unset": [],
+    "path": [
+      "{{component.root}}"
+    ]
+  }
+}
