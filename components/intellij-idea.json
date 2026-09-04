@@ -3,7 +3,7 @@
   "id": "intellij-idea",
   "displayName": "IntelliJ IDEA",
   "description": "IDE unificado de JetBrains: uso gratuito o funciones Ultimate con licencia",
-  "category": "applications",
+  "category": "ides",
   "kind": "application",
   "info": {
     "description": "IntelliJ IDEA mantiene configuración, cachés, plugins y logs separados dentro del profile activo.",

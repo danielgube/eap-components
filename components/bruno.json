@@ -3,7 +3,7 @@
   "id": "bruno",
   "displayName": "Bruno",
   "description": "Cliente de APIs local-first y compatible con Git",
-  "category": "applications",
+  "category": "api-clients",
   "kind": "application",
   "info": {
     "description": "Cliente de APIs local-first cuyos ajustes y colecciones permanecen dentro del profile activo.",

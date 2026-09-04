@@ -3,7 +3,7 @@
   "id": "vscode",
   "displayName": "Visual Studio Code",
   "description": "Editor de Microsoft ligado al workspace del entorno",
-  "category": "applications",
+  "category": "code-editors",
   "kind": "application",
   "info": {
     "description": "Visual Studio Code mantiene configuración y extensiones en el profile y abre el workspace activo.",

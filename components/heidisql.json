@@ -3,7 +3,7 @@
   "id": "heidisql",
   "displayName": "HeidiSQL",
   "description": "Cliente gráfico ligero y portable para MariaDB, MySQL, SQL Server, PostgreSQL, SQLite, Interbase y Firebird.",
-  "category": "database",
+  "category": "database-clients",
   "kind": "application",
   "info": {
     "description": "Cliente de administración de bases de datos con sesiones guardadas, editor SQL y soporte para varios motores. Guarda su configuración y sesiones en un archivo propio del perfil, no en el payload instalado.",

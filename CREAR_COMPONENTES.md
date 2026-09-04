@@ -197,6 +197,63 @@ Campos raíz obligatorios para componentes nuevos:
 Campos habituales opcionales: `description`, `category`, `capability`,
 `platform`, `data`, `requires`, `versioning` y `majorUpdates`.
 
+### `kind` y `category`: no intercambiarlos
+
+`kind` es el tipo técnico raíz del componente para EAP. No describe el sector
+del producto. Es un conjunto cerrado, se escribe en minúsculas y sólo admite
+estos valores:
+
+| `kind` | Úselo cuando el uso principal sea | Ejemplos |
+|---|---|---|
+| `application` | Una aplicación interactiva, normalmente gráfica y con launcher. | HeidiSQL, DBeaver, Bruno, VS Code, IntelliJ IDEA. |
+| `external` | Una aplicación ya instalada fuera de EAP cuyo `.exe` sólo se vincula. | Kiro instalado en Windows. |
+| `runtime` | Un runtime, SDK o plataforma de ejecución elegida por el proyecto. | Java, Node.js, Python, Go, PHP. |
+| `server` | Un servidor cuyo proceso escucha o presta un servicio de red. | Tomcat, Traefik. |
+| `service` | Un proceso auxiliar persistente cuyo papel principal es funcionar como servicio, no como aplicación de usuario ni servidor de desarrollo. | Use este valor sólo si esa distinción es real. |
+| `tool` | Una herramienta consumida principalmente desde terminal, scripts o builds. | Git, Maven. |
+
+Regla obligatoria para agentes de IA: **no deduzca `kind` del dominio, la
+categoría ni el nombre del producto**. `database`, `ide`, `browser` o
+`database-client` no son valores válidos de `kind`. Un cliente gráfico de bases
+de datos, como HeidiSQL, es `application`:
+
+```json
+{
+  "category": "database-clients",
+  "kind": "application"
+}
+```
+
+`category` es sólo una agrupación visual opcional del catálogo. En
+`Catálogo > Instalar componente`, EAP agrupa por `category`; después de
+instalar, la interfaz principal muestra `Categoría` y `Tipo` (`kind`) en
+columnas separadas. Por tanto, el ejemplo anterior se muestra como
+`Clientes BBDD` y como tipo `application`.
+
+Si se omite `category`, EAP la deriva de `kind`. Para mantener las agrupaciones
+estándar, use uno de estos valores:
+
+| `category` | Etiqueta mostrada | Ejemplos |
+|---|---|---|
+| `runtimes` | Runtimes | Java, Node.js, Python, Go, PHP. |
+| `servers` | Servidores | Tomcat, Traefik. |
+| `build-tools` | Herramientas de construcción | Maven. |
+| `version-control` | Control de versiones | Git. |
+| `database-clients` | Clientes BBDD | DBeaver, HeidiSQL. |
+| `api-clients` | Clientes API | Bruno. |
+| `ides` | IDEs | Eclipse, IntelliJ IDEA, Kiro. |
+| `code-editors` | Editores | Visual Studio Code, VSCodium. |
+| `applications` | Aplicaciones | Aplicaciones gráficas sin grupo más específico. |
+| `services` | Servicios | Servicios sin grupo más específico. |
+| `tools` | Herramientas | Herramientas sin grupo más específico. |
+
+No cree otra categoría si una de estas describe el componente. Una categoría
+personalizada sólo cambia el grupo y su orden de presentación; no cambia cómo
+EAP trata el componente.
+
+No confunda tampoco el `kind` raíz con `launchers[].type`: un launcher admite
+`application` si abre una aplicación o `command` si se ejecuta como comando.
+
 Los IDs de componente, proveedor, launcher y comando deben cumplir:
 
 ```text

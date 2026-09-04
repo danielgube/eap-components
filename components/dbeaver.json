@@ -3,7 +3,7 @@
   "id": "dbeaver",
   "displayName": "DBeaver Community",
   "description": "Cliente universal de bases de datos, portable y de código abierto",
-  "category": "applications",
+  "category": "database-clients",
   "kind": "application",
   "info": {
     "description": "Cliente universal de bases de datos con configuración y workspace privados en el profile activo.",

@@ -3,7 +3,7 @@
   "id": "eclipse",
   "displayName": "Eclipse IDE",
   "description": "IDE portable con paquetes Java y Enterprise Java/Web",
-  "category": "applications",
+  "category": "ides",
   "kind": "application",
   "info": {
     "description": "IDE portable que conserva su configuración privada en el profile y abre el workspace activo.",

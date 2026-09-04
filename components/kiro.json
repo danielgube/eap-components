@@ -2,6 +2,7 @@
   "schemaVersion": 3,
   "id": "kiro",
   "displayName": "Kiro",
+  "category": "ides",
   "kind": "external",
   "info": {
     "description": "Instalación externa de Kiro vinculada a EAP para abrir el workspace activo.",

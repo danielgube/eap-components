@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 3,
+  "id": "sqldeveloper",
+  "displayName": "Oracle SQL Developer",
+  "description": "IDE gráfico de Oracle para desarrollar y administrar bases de datos Oracle (y otros motores vía JDBC).",
+  "category": "database-clients",
+  "kind": "application",
+  "info": {
+    "description": "IDE de Oracle para bases de datos. La variante sin JRE no incluye JDK: necesita un JDK 17 accesible en el sistema y, si no lo encuentra, pregunta la ruta la primera vez que se abre.",
+    "paths": [
+      {
+        "displayName": "Datos de usuario (pendiente de confirmar redirección)",
+        "base": "profile",
+        "relativePath": "components/sqldeveloper/userdata",
+        "type": "directory"
+      }
+    ]
+  },
+  "launchers": [
+    {
+      "id": "sqldeveloper",
+      "displayName": "SQL Developer",
+      "type": "application",
+      "workspaceMode": "component-data",
+      "executable": "{{component.root}}/sqldeveloper.exe",
+      "arguments": [],
+      "environment": {},
+      "unset": [],
+      "dataDirectories": [
+        "{{data.component}}/userdata"
+      ],
+      "startMode": "detached"
+    }
+  ],
+  "capability": {
+    "id": "tool.sqldeveloper",
+    "exclusive": true
+  },
+  "platform": {
+    "os": "windows",
+    "architecture": "x64",
+    "archiveType": "zip"
+  },
+  "tracks": [
+    {
+      "id": 26,
+      "displayName": "SQL Developer 26.x"
+    }
+  ],
+  "defaultProvider": "official",
+  "defaultTrack": 26,
+  "updatePolicy": "same-track",
+  "providers": [
+    {
+      "id": "official",
+      "componentId": "sqldeveloper-official",
+      "displayName": "Distribución oficial (sin JRE)",
+      "vendor": "Oracle",
+      "license": "Oracle Free Use Terms and Conditions",
+      "homepage": "https://www.oracle.com/database/sqldeveloper/",
+      "resolver": {
+        "type": "html-links",
+        "indexUrl": "https://www.oracle.com/database/sqldeveloper/technologies/download/",
+        "linkPattern": "^sqldeveloper-(?P<version>\\d+(?:\\.\\d+)+)-no-jre\\.zip$"
+      },
+      "verification": {
+        "type": "none"
+      }
+    }
+  ],
+  "install": {
+    "directoryTemplate": "sqldeveloper/{provider}/{version}",
+    "stripSingleRoot": true,
+    "maxExtractBytes": 1610612736,
+    "requiredFiles": [
+      "sqldeveloper.exe"
+    ],
+    "validation": {
+      "type": "files-only"
+    }
+  },
+  "data": {
+    "directories": [
+      {
+        "path": "{{data.component}}/userdata",
+        "displayName": "Datos de usuario",
+        "role": "configuration",
+        "showInDashboard": true
+      }
+    ],
+    "files": []
+  },
+  "environment": {
+    "variables": {},
+    "path": [
+      "{{component.root}}"
+    ]
+  }
+}

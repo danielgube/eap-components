@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "catalogVersion": "1.6.0",
+  "catalogVersion": "1.7.0",
   "components": [
     {
       "id": "java",
@@ -45,6 +45,10 @@
     {
       "id": "dbeaver",
       "manifest": "components/dbeaver.json"
+    },
+	{
+      "id": "sqldeveloper",
+      "manifest": "components/sqldeveloper.json"
     },
 	{
       "id": "heidisql",

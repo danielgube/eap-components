@@ -3,7 +3,7 @@
   "id": "vscodium",
   "displayName": "VSCodium",
   "description": "Build comunitaria open source de VS Code sin telemetría de Microsoft",
-  "category": "applications",
+  "category": "code-editors",
   "kind": "application",
   "info": {
     "description": "VSCodium mantiene configuración y extensiones en el profile y abre el workspace activo.",
