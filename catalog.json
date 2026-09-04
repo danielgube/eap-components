@@ -46,6 +46,10 @@
       "id": "dbeaver",
       "manifest": "components/dbeaver.json"
     },
+	{
+      "id": "heidisql",
+      "manifest": "components/heidisql.json"
+    },
     {
       "id": "vscode",
       "manifest": "components/vscode.json"

@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 3,
+  "id": "heidisql",
+  "displayName": "HeidiSQL",
+  "description": "Cliente gráfico ligero y portable para MariaDB, MySQL, SQL Server, PostgreSQL, SQLite, Interbase y Firebird.",
+  "category": "database",
+  "kind": "application",
+  "info": {
+    "description": "Cliente de administración de bases de datos con sesiones guardadas, editor SQL y soporte para varios motores. Guarda su configuración y sesiones en un archivo propio del perfil, no en el payload instalado.",
+    "paths": [
+      {
+        "displayName": "Configuración y sesiones",
+        "base": "profile",
+        "relativePath": "components/heidisql/portable_settings.json",
+        "type": "file"
+      }
+    ]
+  },
+  "launchers": [
+    {
+      "id": "heidisql",
+      "displayName": "HeidiSQL",
+      "type": "application",
+      "workspaceMode": "component-data",
+      "executable": "{{component.root}}/heidisql.exe",
+      "arguments": [
+        "--psettings={{data.component}}/portable_settings.json"
+      ],
+      "environment": {},
+      "unset": [],
+      "dataDirectories": [
+        "{{data.component}}"
+      ],
+      "startMode": "detached"
+    }
+  ],
+  "capability": {
+    "id": "tool.heidisql",
+    "exclusive": true
+  },
+  "platform": {
+    "os": "windows",
+    "architecture": "x64",
+    "archiveType": "zip"
+  },
+  "tracks": [
+    {
+      "id": 12,
+      "displayName": "HeidiSQL 12.x"
+    }
+  ],
+  "defaultProvider": "official",
+  "defaultTrack": 12,
+  "updatePolicy": "same-track",
+  "providers": [
+    {
+      "id": "official",
+      "componentId": "heidisql-official",
+      "displayName": "Distribución oficial",
+      "vendor": "HeidiSQL Project",
+      "license": "GPL-2.0-only",
+      "homepage": "https://www.heidisql.com/",
+      "resolver": {
+        "type": "github-release-asset",
+        "apiUrl": "https://api.github.com/repos/HeidiSQL/HeidiSQL/releases?per_page=100",
+        "assetPattern": "^HeidiSQL_(?P<version>\\d+\\.\\d+)_64_Portable\\.zip$"
+      },
+      "verification": {
+        "checksumAlgorithm": "sha256",
+        "source": "GitHub release asset digest"
+      }
+    }
+  ],
+  "install": {
+    "directoryTemplate": "heidisql/{provider}/{version}",
+    "stripSingleRoot": false,
+    "maxExtractBytes": 209715200,
+    "requiredFiles": [
+      "heidisql.exe",
+      "portable.lock"
+    ],
+    "validation": {
+      "type": "files-only"
+    }
+  },
+  "data": {
+    "directories": [],
+    "files": [
+      {
+        "path": "{{data.component}}/portable_settings.json",
+        "displayName": "Configuración y sesiones",
+        "role": "configuration",
+        "showInDashboard": true,
+        "mode": "if-missing",
+        "content": "{}\n"
+      }
+    ]
+  },
+  "environment": {
+    "variables": {
+      "HEIDISQL_HOME": "{{component.root}}"
+    },
+    "path": [
+      "{{component.root}}"
+    ]
+  }
+}

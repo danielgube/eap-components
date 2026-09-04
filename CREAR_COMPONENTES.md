@@ -1,146 +1,105 @@
-# Manual para crear componentes EAP
+# Crear componentes EAP — guía operativa
 
-Esta guía permite añadir un componente sin conocer el código fuente de EAP.
-Describe el contrato público de los manifiestos de componentes para el esquema
-`schemaVersion: 3`, sus límites actuales y el proceso completo de prueba y
-publicación.
+Esta guía es una especificación de trabajo para personas y agentes de IA. Su
+objetivo es añadir o actualizar un componente con el mínimo de interpretación.
 
-## 1. Qué es un componente
+## Resultado obligatorio
 
-Un componente es software que EAP puede resolver, descargar, verificar,
-instalar y activar dentro de uno o varios profiles. Puede publicar ejecutables
-en `PATH`, variables de entorno, comandos y launchers de aplicaciones.
-
-Ejemplos: Java, Maven, Git, Node.js, Bruno, Eclipse o IntelliJ IDEA.
-
-Use un componente cuando se cumpla alguna de estas condiciones:
-
-- el software tiene versiones o líneas que EAP debe instalar y actualizar;
-- debe aportar ejecutables o variables al entorno completo del profile;
-- es una aplicación portable con configuración o workspace propios;
-- representa una aplicación ya instalada en el equipo que EAP sólo debe
-  vincular.
-
-Para una utilidad pequeña formada por scripts y uno o varios comandos suele ser
-mejor crear una Pocketool. Consulte el manual `CREAR_POCKETOOLS.md` del
-repositorio `eap-pocketools`.
-
-## 2. Límites actuales
-
-Antes de empezar, compruebe que el componente cabe en el contrato actual:
-
-- EAP sólo instala automáticamente archivos ZIP.
-- Todas las fuentes remotas deben usar HTTPS.
-- El ZIP debe proporcionar SHA-256 o SHA-512 mediante uno de los resolvers
-  soportados.
-- El destino es Windows; los manifiestos actuales usan Windows x64.
-- Un repositorio de componentes sólo contiene JSON. EAP todavía no descarga ni
-  ejecuta adaptadores Python externos.
-- Si el fabricante publica sus versiones mediante una API o estructura no
-  soportada, no basta con inventar un nuevo valor en `resolver.type`: será
-  necesario incorporar primero un resolver compatible en EAP o esperar a la
-  futura Adapter API.
-- MSI, EXE instalables, scripts de instalación, enlaces simbólicos y archivos
-  que deban escribirse fuera de EAP no están soportados como instalaciones
-  administradas.
-
-La excepción es un componente `external`: EAP no instala el programa, sino que
-el usuario selecciona un `.exe` ya existente en el equipo.
-
-## 3. Estructura del repositorio
-
-Un repositorio de componentes tiene esta forma:
+Un componente nuevo no está publicado hasta que existen **los dos cambios**:
 
 ```text
-catalog.json
-components/
-  mi-componente.json
+components/<id>.json                 # definición del componente
+catalog.json                         # entrada que apunta a la definición
 ```
 
-El nombre del archivo debe coincidir exactamente con el ID:
+EAP sólo descarga los manifiestos enumerados en `catalog.json`. Crear
+`components/<id>.json` sin registrarlo en el catálogo no produce un error: el
+archivo simplemente no existe para EAP y no aparecerá como instalable.
 
-```text
-components/<id>.json
-```
-
-No se admiten subdirectorios alternativos, rutas absolutas ni `..`.
-
-El componente también debe aparecer en `catalog.json`:
+La entrada mínima es:
 
 ```json
 {
-  "schemaVersion": 1,
-  "catalogVersion": "1.1.0",
-  "components": [
-    {
-      "id": "mi-componente",
-      "manifest": "components/mi-componente.json"
-    }
-  ]
+  "id": "mi-componente",
+  "manifest": "components/mi-componente.json"
 }
 ```
 
-Reglas del catálogo:
+El mismo ID debe aparecer, con idéntica capitalización, en:
 
-- `schemaVersion` debe ser `1`.
-- `catalogVersion` identifica la versión del catálogo. Se recomienda SemVer y
-  aumentarla cuando cambie cualquier manifiesto.
-- `components` debe contener entre 1 y 1000 entradas.
-- Los IDs no pueden repetirse.
-- El catálogo y cada manifiesto tienen un límite de 1 MiB durante la descarga.
-- Dos repositorios externos no pueden publicar el mismo ID. EAP rechazará la
-  composición en vez de escoger uno silenciosamente.
-- Un componente externo sí puede sustituir al snapshot integrado en EAP con el
-  mismo ID. Así funciona el catálogo oficial.
+1. `catalog.json` → `components[].id`;
+2. el nombre `components/<id>.json`;
+3. el campo raíz `id` del manifiesto.
 
-## 4. Ejemplo mínimo completo
+Al cambiar cualquier manifiesto, incremente también `catalogVersion` y publique
+los cambios en `main`.
 
-Este ejemplo representa una aplicación gráfica publicada como ZIP en GitHub.
-Es el punto de partida recomendado para la mayoría de aplicaciones portables.
+## Restricciones que se comprueban antes de empezar
+
+Un componente administrado es viable sólo si el fabricante ofrece:
+
+- un ZIP para Windows con todos los archivos necesarios;
+- descarga por HTTP o HTTPS; use HTTPS siempre que esté disponible;
+- SHA-256/SHA-512 oficial o, como último recurso, una página HTML que enlace el
+  ZIP y pueda resolverse con `html-links`;
+- una fuente de versiones compatible con uno de los resolvers de esta guía.
+
+EAP no instala MSI o EXE, no ejecuta scripts de instalación, no crea enlaces
+simbólicos y no escribe fuera de sus directorios administrados. Si sólo se debe
+usar un `.exe` ya instalado, cree un componente `external`.
+
+No invente un `resolver.type` ni omita `verification`. Sólo `html-links` admite
+`"verification": {"type": "none"}`. No coloque configuración, cachés o
+workspaces dentro del payload instalado.
+
+## Flujo de trabajo para un agente
+
+Siga este orden. No dé el componente por terminado antes del paso 7.
+
+1. Busque el manifiesto existente más parecido por distribución y resolver; no
+   se guíe sólo por la categoría del producto.
+2. Consulte la fuente oficial y confirme versión estable, nombre del ZIP, URL,
+   licencia y checksum, si existe.
+3. Inspeccione el ZIP real. Determine si contiene una única carpeta raíz y
+   anote ejecutables y archivos estructurales que irán en `requiredFiles`.
+4. Cree o actualice `components/<id>.json` con `schemaVersion: 3`.
+5. Registre el componente en `catalog.json` e incremente `catalogVersion`.
+6. Valide la sintaxis de ambos JSON y revise la checklist final.
+7. Publique en una rama `main`, refresque la fuente en EAP y pruebe `resolve`,
+   `install`, `launch --dry-run` cuando corresponda y `doctor`.
+
+Si la fuente o el artefacto no encajan en un resolver soportado, deténgase y
+comunique esa limitación. La ausencia de checksum no bloquea `html-links`, pero
+sí debe declararse con `verification.type: "none"`.
+
+## Plantilla: componente ZIP administrado
+
+Use esta base para herramientas, runtimes, servidores y aplicaciones portables
+publicadas en GitHub Releases. Quite los bloques opcionales que no necesite.
 
 ```json
 {
   "schemaVersion": 3,
-  "id": "mi-cliente",
-  "displayName": "Mi Cliente",
-  "description": "Cliente portable de ejemplo",
-  "category": "applications",
-  "kind": "application",
+  "id": "mi-componente",
+  "displayName": "Mi Componente",
+  "description": "Descripción breve",
+  "category": "tools",
+  "kind": "tool",
   "info": {
-    "description": "Cliente portable cuyos ajustes se conservan dentro del profile activo.",
+    "description": "Explica en una frase qué aporta y dónde conserva su estado.",
     "paths": [
       {
-        "displayName": "Configuración de Mi Cliente",
+        "displayName": "Configuración",
         "base": "profile",
-        "relativePath": "components/mi-cliente/user-data"
-      },
-      {
-        "displayName": "Workspace activo",
-        "base": "workspace",
-        "relativePath": "."
+        "relativePath": "components/mi-componente/config",
+        "type": "directory"
       }
     ]
   },
-  "launchers": [
-    {
-      "id": "mi-cliente",
-      "displayName": "Mi Cliente",
-      "type": "application",
-      "workspaceMode": "environment",
-      "executable": "{{component.root}}/MiCliente.exe",
-      "arguments": [],
-      "environment": {
-        "EAP_COMPONENT_DATA": "{{data.component}}"
-      },
-      "dataDirectories": [
-        "{{data.component}}/user-data"
-      ],
-      "startMode": "detached"
-    }
-  ],
+  "launchers": [],
   "capability": {
-    "id": "app.mi-cliente",
-    "exclusive": false
+    "id": "tool.mi-componente",
+    "exclusive": true
   },
   "platform": {
     "os": "windows",
@@ -149,25 +108,25 @@ Es el punto de partida recomendado para la mayoría de aplicaciones portables.
   },
   "tracks": [
     {
-      "id": 2,
-      "displayName": "Mi Cliente 2.x estable"
+      "id": 1,
+      "displayName": "Mi Componente 1.x"
     }
   ],
-  "defaultProvider": "community",
-  "defaultTrack": 2,
+  "defaultProvider": "official",
+  "defaultTrack": 1,
   "updatePolicy": "same-track",
   "providers": [
     {
-      "id": "community",
-      "componentId": "mi-cliente-community",
-      "displayName": "Mi Cliente Community",
-      "vendor": "Ejemplo",
-      "license": "MIT",
+      "id": "official",
+      "componentId": "mi-componente-official",
+      "displayName": "Distribución oficial",
+      "vendor": "Fabricante",
+      "license": "SPDX-o-Proprietaria",
       "homepage": "https://example.org/",
       "resolver": {
         "type": "github-release-asset",
-        "apiUrl": "https://api.github.com/repos/example/mi-cliente/releases?per_page=100",
-        "assetPattern": "^mi-cliente-(?P<version>\\d+\\.\\d+\\.\\d+)-windows-x64\\.zip$"
+        "apiUrl": "https://api.github.com/repos/owner/repository/releases?per_page=100",
+        "assetPattern": "^producto-(?P<version>\\d+\\.\\d+\\.\\d+)-windows-x64\\.zip$"
       },
       "verification": {
         "checksumAlgorithm": "sha256",
@@ -176,12 +135,11 @@ Es el punto de partida recomendado para la mayoría de aplicaciones portables.
     }
   ],
   "install": {
-    "directoryTemplate": "mi-cliente/{provider}/{version}",
+    "directoryTemplate": "mi-componente/{provider}/{version}",
     "stripSingleRoot": false,
     "maxExtractBytes": 1073741824,
     "requiredFiles": [
-      "MiCliente.exe",
-      "resources/app.asar"
+      "bin/mi-componente.exe"
     ],
     "validation": {
       "type": "files-only"
@@ -190,8 +148,8 @@ Es el punto de partida recomendado para la mayoría de aplicaciones portables.
   "data": {
     "directories": [
       {
-        "path": "{{data.component}}/user-data",
-        "displayName": "Configuración de Mi Cliente",
+        "path": "{{data.component}}/config",
+        "displayName": "Configuración",
         "role": "configuration",
         "showInDashboard": true
       }
@@ -200,164 +158,114 @@ Es el punto de partida recomendado para la mayoría de aplicaciones portables.
   },
   "environment": {
     "variables": {
-      "MI_CLIENTE_HOME": "{{component.root}}"
+      "MI_COMPONENTE_HOME": "{{component.root}}"
     },
-    "path": []
+    "path": [
+      "{{component.root}}/bin"
+    ]
   }
 }
 ```
 
-Para adaptar el ejemplo hay que cambiar, como mínimo:
+Referencias recomendadas del repositorio:
 
-1. ID, nombres y metadatos.
-2. Línea o líneas soportadas.
-3. URL de la API de releases.
-4. Expresión regular del asset.
-5. Ejecutable, archivos obligatorios y rutas de datos.
-6. Entrada correspondiente de `catalog.json`.
+- CLI con smoke test: `git.json`, `maven.json`, `nodejs.json`;
+- aplicación ZIP: `bruno.json`, `vscodium.json`;
+- estado portable complejo: `dbeaver.json`, `intellij-idea.json`;
+- aplicación instalada externamente: `kiro.json`.
 
-## 5. Contrato del manifiesto
+## Contrato mínimo del manifiesto
 
-### 5.1 Campos de primer nivel
+Campos raíz obligatorios para componentes nuevos:
 
-| Campo | Obligatorio | Contrato |
-|---|---:|---|
-| `schemaVersion` | Sí | Debe valer `3`; EAP conserva lectura compatible de manifiestos `1` y `2`. |
-| `id` | Sí | Identificador estable; debe coincidir con catálogo y archivo. |
-| `displayName` | Sí | Nombre visible para el usuario. |
-| `description` | Recomendado | Descripción breve. |
-| `category` | Opcional | Agrupación informativa, por ejemplo `applications`. |
-| `kind` | Sí | `application`, `external`, `runtime`, `server`, `service` o `tool`. |
-| `info` | Sí | Descripción breve y rutas importantes relativas. |
-| `launchers` | Sí | Lista; puede estar vacía salvo para `external`. |
-| `capability` | Recomendado | Capacidad que otras herramientas pueden requerir. |
-| `platform` | Recomendado | Metadatos de SO, arquitectura y archivo. |
-| `tracks` | Sí | Una o más líneas instalables. |
-| `defaultProvider` | Sí | ID de un proveedor declarado. |
-| `defaultTrack` | Sí | ID de una línea declarada. |
-| `updatePolicy` | Sí | `same-track` o `manual`. |
-| `versioning` | No | Comparación de versiones; `scheme` puede ser `numeric` (por defecto) o `java`. |
-| `majorUpdates` | No | `confirm-component-name` para ofrecer líneas mayores con confirmación reforzada. |
-| `providers` | Sí | Uno o más proveedores. |
-| `install` | Sí | Contrato de instalación o vinculación. |
-| `data` | Opcional | Directorios y archivos mutables del profile. |
-| `environment` | Sí | Variables, PATH y comandos publicados. |
-| `requires` | Opcional | Dependencias informativas de componentes. |
+| Campo | Regla |
+|---|---|
+| `schemaVersion` | Use `3`. |
+| `id` | ID estable; coincide con archivo y catálogo. |
+| `displayName` | Nombre mostrado al usuario. |
+| `kind` | `application`, `external`, `runtime`, `server`, `service` o `tool`. |
+| `info` | Descripción y al menos una ruta importante. |
+| `launchers` | Lista; puede ser `[]`, salvo en componentes `external`. |
+| `tracks` | Lista no vacía de `{id, displayName}`. |
+| `providers` | Lista no vacía de proveedores. |
+| `defaultProvider` | ID de un proveedor declarado. |
+| `defaultTrack` | ID de un track declarado. |
+| `updatePolicy` | `same-track` o `manual`. |
+| `install` | Instalación ZIP o vinculación externa. |
+| `environment` | Debe incluir `variables` y `path`, aunque estén vacíos. |
 
-`server` es una clasificación informativa. EAP lo instala, activa y actualiza
-como un runtime; sólo tendrá una acción Run si el manifiesto declara launchers.
-La gestión de instancias, puertos o procesos debe permanecer en un launcher o
-una Pocketool explícitos.
+Campos habituales opcionales: `description`, `category`, `capability`,
+`platform`, `data`, `requires`, `versioning` y `majorUpdates`.
 
-### 5.2 Información y rutas importantes
-
-`info` explica qué aporta el componente y dónde guarda sus datos relevantes.
-EAP muestra este bloque antes de instalar y desde el acceso `[Ni]` de la
-pantalla principal.
-
-```json
-"info": {
-  "description": "Node.js aísla la configuración, cachés y paquetes globales de npm dentro del profile activo.",
-  "paths": [
-    {
-      "displayName": "Caché npm",
-      "base": "profile",
-      "relativePath": "home/.npm"
-    },
-    {
-      "displayName": "Configuración npm (.npmrc)",
-      "base": "profile",
-      "relativePath": "home/.npmrc"
-    }
-  ]
-}
-```
-
-Reglas:
-
-- `description` es obligatoria, no puede superar 400 caracteres y debe tener
-  como máximo tres frases breves.
-- `paths` debe contener al menos una entrada.
-- `base` sólo admite `profile` o `workspace`.
-- `relativePath` usa `/`, nunca es absoluta y no admite segmentos `..`.
-- Use `.` para señalar la raíz de la base elegida.
-- EAP concatena cada ruta relativa con el profile de datos o el workspace
-  activos y muestra el resultado como ruta absoluta.
-
-### 5.3 Identificadores y versiones
-
-Los IDs de componente, proveedor y launcher deben cumplir:
+Los IDs de componente, proveedor, launcher y comando deben cumplir:
 
 ```text
 ^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$
 ```
 
-No use nombres reservados de Windows como `CON`, `NUL`, `COM1` o `LPT1`.
-Mantenga el ID para siempre: forma parte de rutas, profiles y lockfiles.
+No use nombres reservados de Windows (`CON`, `NUL`, `COM1`, `LPT1`, etc.). No
+cambie un ID publicado: forma parte de rutas, profiles y lockfiles.
 
-Las versiones resueltas deben comenzar por una letra o número, medir como
-máximo 128 caracteres y usar únicamente letras, números, `.`, `_`, `+` y `-`.
-EAP ordena normalmente las versiones usando todos sus grupos numéricos.
-
-### 5.4 Líneas o tracks
+### `info`
 
 ```json
-"tracks": [
-  {"id": 1, "displayName": "Producto 1.x"},
-  {"id": "2026.2", "displayName": "Producto 2026.2"}
-]
-```
-
-El ID puede ser entero o texto. Para resolvers automáticos, los grupos numéricos
-de la versión deben comenzar por los grupos de la línea:
-
-- línea `4` acepta `4.1.2`;
-- línea `2026.2` acepta `2026.2.1`;
-- línea `3.14` acepta `3.14.8`.
-
-`same-track` permite buscar actualizaciones dentro de la misma línea. Use
-`manual` para componentes vinculados o sin actualización automática.
-
-La comparación normal extrae y compara numéricamente los grupos de la versión.
-Las distribuciones Java pueden declarar `"versioning": {"scheme": "java"}`
-para aplicar su orden de release y build sin que EAP dependa del ID `java` ni de
-un nombre de componente concreto.
-
-Los componentes que puedan avanzar entre versiones mayores pueden declarar:
-
-```json
-"majorUpdates": "confirm-component-name"
-```
-
-En ese caso cada track debe ser un entero positivo que represente exactamente
-la versión mayor (`26`, `27`, etc.). EAP ofrece las actualizaciones patch y
-minor de la línea activa de forma normal. Cuando el catálogo publique una
-línea mayor nueva, también la ofrece, pero muestra un aviso de compatibilidad y
-exige escribir el ID del componente para instalarla. Añada el nuevo track sólo
-después de validar la release y sus recomendaciones de migración.
-
-No active esta política para runtimes cuyo major forma parte del contrato del
-proyecto, como Java, Go, PHP, Node.js o Python, ni para herramientas que deban
-permanecer fijadas a una línea de compatibilidad.
-
-## 6. Proveedores y resolución de versiones
-
-Cada proveedor contiene como mínimo:
-
-```json
-{
-  "id": "community",
-  "componentId": "producto-community",
-  "displayName": "Producto Community",
-  "resolver": {},
-  "verification": {}
+"info": {
+  "description": "Entre una y tres frases breves; máximo 400 caracteres.",
+  "paths": [
+    {
+      "displayName": "Caché",
+      "base": "profile",
+      "relativePath": "components/producto/cache",
+      "type": "directory"
+    }
+  ]
 }
 ```
 
-`vendor`, `license` y `homepage` son metadatos recomendados. `componentId`
-identifica la distribución concreta y debe ser estable.
+- `base`: `profile` o `workspace`.
+- `relativePath`: relativa, con `/`, sin `..`; use `.` para la raíz.
+- `type`: obligatorio en schema 3; `directory` o `file`.
 
-### 6.1 Resolver recomendado: GitHub Releases
+### Tracks y actualizaciones
+
+El ID puede ser entero o texto. La versión resuelta debe comenzar por los
+grupos numéricos del track: el track `3` acepta `3.2.1`; `2026.2` acepta
+`2026.2.4`.
+
+- `same-track`: busca actualizaciones dentro del track activo.
+- `manual`: no busca actualizaciones automáticas; úselo para `external`.
+- `versioning.scheme`: `numeric` por defecto o `java` para distribuciones Java.
+- `majorUpdates: "confirm-component-name"`: permite ofrecer un track mayor con
+  confirmación reforzada. Sólo con `same-track`, no con `external`, y todos los
+  tracks deben ser enteros positivos que representen el major.
+
+No active actualizaciones mayores para runtimes cuyo major sea parte del
+contrato del proyecto, como Java, Node.js, Go, PHP o Python.
+
+## Elegir resolver
+
+Para un componente nuevo, prefiera uno de estos:
+
+| Resolver | Cuándo usarlo | Requisito decisivo |
+|---|---|---|
+| `github-release-asset` | GitHub Releases | El asset ZIP tiene `digest` SHA-256 en la API. |
+| `json-index` | API JSON genérica | La respuesta expone versión, ZIP HTTPS y SHA-256/SHA-512. |
+| `html-directory` | Índice HTML | Hay patrón de versión, URL de ZIP y checksum separado. |
+| `html-links` | Web de releases, GitLab, Gitea o autoindex de Apache | Un enlace identifica el ZIP y contiene la versión; el checksum puede no existir. |
+| `external-executable` | Programa ya instalado | Sólo para `kind: external`. |
+
+EAP también conserva resolvers específicos para catálogos existentes:
+`adoptium-v3`, `corretto-index`, `apache-directory`, `dbeaver-download-page`,
+`nodejs-index`, `golang-downloads-index`, `php-windows-releases`,
+`python-install-manager-index`, `vscode-update-api`,
+`jetbrains-product-release` y `eclipse-epp-release`. No los reutilice para otro
+producto salvo que consuma exactamente la misma API.
+
+`github-release` **no** es un resolver soportado. Para GitHub use
+`github-release-asset` si el asset publica digest. Si no lo publica, use
+`html-links` sobre la página de releases cuando el ZIP aparezca como enlace.
+
+### GitHub Releases
 
 ```json
 "resolver": {
@@ -367,46 +275,96 @@ identifica la distribución concreta y debe ser estable.
 }
 ```
 
-Comportamiento:
-
-- `apiUrl` puede devolver una release o una lista.
 - Se ignoran drafts y prereleases.
-- `assetPattern` es una expresión regular y debe coincidir con el nombre
-  completo del ZIP.
-- La expresión debe incluir el grupo nombrado `(?P<version>...)`.
-- La versión capturada debe pertenecer al track seleccionado.
-- La release debe publicar `digest` para el asset, normalmente
-  `sha256:<hash>`. Si GitHub no publica digest, este resolver no puede verificar
-  el archivo.
-- El asset debe ser un `.zip` descargable mediante HTTPS.
+- `assetPattern` debe coincidir con el nombre completo del ZIP.
+- Debe contener el grupo nombrado `(?P<version>...)`.
+- La versión capturada debe pertenecer al track.
+- La API de GitHub debe devolver `digest: sha256:<hash>` para el asset.
 
-### 6.2 Resolvers disponibles
+### Enlaces HTML genéricos sin checksum
 
-| `resolver.type` | Uso | Campos |
-|---|---|---|
-| `github-release-asset` | ZIP estable en GitHub Releases | `apiUrl`, `assetPattern` |
-| `jetbrains-product-release` | API oficial de productos JetBrains | `apiUrl`, `productCode`, `downloadKey` opcional (`windowsZip`) |
-| `eclipse-epp-release` | Paquetes Eclipse EPP | `downloadBaseUrl`, `packageName`, `releaseBuild` opcional (`R`) |
-| `adoptium-v3` | JDK de Adoptium | `baseUrl`; opcionales `vendor`, `jvmImpl` |
-| `corretto-index` | JDK de Amazon Corretto | `indexUrl`, `resourceBaseUrl` |
-| `html-directory` | Directorio HTML con ZIP y checksum separado | `indexUrl`, `releasePattern`, plantillas de artefacto y checksum |
-| `apache-directory` | Resolver antiguo de Maven; sólo compatibilidad | `indexUrl`, `downloadBaseUrl` |
-| `nodejs-index` | Índice oficial de Node.js | `indexUrl`, `downloadBaseUrl` |
-| `json-index` | API JSON declarativa con selección de release, artefacto y checksum | `indexUrl`, `releases`, `artifacts` |
-| `python-install-manager-index` | Índice Windows de Python Install Manager | `indexUrl`; opcionales `company`, `architectureTag` |
-| `vscode-update-api` | API de actualización de VS Code | `updateUrl` |
-| `external-executable` | Programa ya instalado en el host | Sin campos adicionales; sólo para `kind: external` |
+Use `html-links` cuando una página web enlaza los ZIP pero no ofrece una API o
+un checksum fácil de consumir. Cubre páginas de releases renderizadas en el
+servidor, GitLab, Gitea y listados de directorio de Apache (`autoindex`) por
+HTTP o HTTPS.
 
-Los resolvers específicos están ligados a la estructura concreta indicada. Use
-`json-index` para una API JSON y `html-directory` para un índice HTML con
-checksum separado; copie otro bloque sólo si el producto usa exactamente la
-misma API.
+Ejemplo real para Windows Terminal estable x64:
 
-### 6.3 Resolver JSON declarativo
+```json
+{
+  "resolver": {
+    "type": "html-links",
+    "indexUrl": "https://github.com/microsoft/terminal/releases/",
+    "linkPattern": "^Microsoft\\.WindowsTerminal.*?_(?P<version>\\d+(?:\\.\\d+){3})_x64\\.zip$",
+    "excludePatterns": [
+      "Preview"
+    ]
+  },
+  "verification": {
+    "type": "none"
+  }
+}
+```
 
-`json-index` permite integrar una API JSON nueva sin modificar EAP ni ejecutar
-código procedente del catálogo. Sólo admite selección de datos, filtros escalares,
-una expresión regular para normalizar la versión y plantillas HTTPS limitadas.
+Contrato exacto:
+
+- `indexUrl` es una URL absoluta HTTP o HTTPS. Sólo admite el token opcional
+  `{track}`.
+- `linkPattern` es una expresión regular y debe contener
+  `(?P<version>...)`. Se aplica como coincidencia completa, primero al texto
+  visible normalizado del enlace y después al nombre de archivo decodificado
+  de su URL.
+- `excludePatterns` es opcional. Si cualquiera aparece en el texto, nombre de
+  archivo o URL absoluta, ese enlace se descarta antes de aplicar
+  `linkPattern`.
+- La comparación no depende del orden del HTML: EAP extrae todas las versiones,
+  conserva sólo las que pertenecen al track solicitado y elige la mayor según
+  `versioning`. Si dos enlaces publican la misma versión, conserva el primero.
+- Las expresiones no distinguen mayúsculas de forma predeterminada. Añada
+  `"caseSensitive": true` si deben distinguirlas.
+- Se admiten enlaces relativos, absolutos y `<base href>`. EAP sigue
+  automáticamente `<include-fragment src>`; esto permite resolver las páginas
+  de GitHub que cargan sus assets como fragmentos.
+- Para páginas que enlazan primero a un detalle de release, añada
+  `followPattern`: se busca en la URL absoluta de cada enlace. `maxDepth` es
+  opcional, vale `1` por defecto y sólo admite valores de `1` a `3`. No declare
+  `maxDepth` sin `followPattern`.
+- Se consultan como máximo 32 páginas y 5 MiB por página. Un fragmento o página
+  secundaria inaccesible se ignora; la `indexUrl` inicial sí es obligatoria.
+- El enlace seleccionado debe terminar en `.zip` y producir un nombre de
+  archivo seguro.
+
+Ejemplo de navegación a páginas de detalle:
+
+```json
+{
+  "resolver": {
+    "type": "html-links",
+    "indexUrl": "http://intranet.example.org/producto/releases/",
+    "followPattern": "/producto/releases/v\\d+\\.\\d+\\.\\d+$",
+    "maxDepth": 1,
+    "linkPattern": "^producto-(?P<version>\\d+\\.\\d+\\.\\d+)-windows-x64\\.zip$",
+    "excludePatterns": [
+      "preview",
+      "arm64"
+    ]
+  },
+  "verification": {
+    "type": "none"
+  }
+}
+```
+
+`html-links` no ejecuta JavaScript, no inicia sesión y no descubre paginación
+por sí solo. La página o sus fragmentos deben contener enlaces HTML reales.
+
+Este resolver no verifica autenticidad contra un checksum publicado. Tras la
+descarga, EAP calcula un SHA-256 local y lo guarda en la instalación y el lock
+para reutilización y reproducibilidad. Ese hash describe lo descargado; no
+demuestra que el servidor haya entregado el archivo legítimo. En HTTP tampoco
+protege la descarga en tránsito.
+
+### API JSON genérica
 
 ```json
 "resolver": {
@@ -424,8 +382,7 @@ una expresión regular para normalizar la versión y plantillas HTTPS limitadas.
     "path": "/files",
     "filters": {
       "/os": "windows",
-      "/arch": "x64",
-      "/type": "archive"
+      "/arch": "x64"
     },
     "fileNamePath": "/name",
     "urlPath": "/url",
@@ -435,72 +392,32 @@ una expresión regular para normalizar la versión y plantillas HTTPS limitadas.
 }
 ```
 
-Las rutas usan un subconjunto seguro de JSON Pointer:
+Las rutas usan un subconjunto de JSON Pointer; `*` selecciona elementos. Si
+quedan varios artefactos, defina `selection` como `first` o `last`; el valor
+predeterminado `only` exige uno. `artifacts` declara exactamente un origen de
+URL (`urlPath` o `urlTemplate`) y un checksum (`sha256Path` o `sha512Path`).
 
-- `/` representa el documento u objeto actual.
-- Cada segmento navega por una propiedad; `~1` representa `/` y `~0`, `~`.
-- `*` permite seleccionar elementos o claves coincidentes. Si quedan varios
-  artefactos, `selection` debe ser `first` o `last`; el valor predeterminado
-  `only` rechaza una selección ambigua.
-- `{track}` está disponible en `indexUrl`, rutas y filtros. Las plantillas de URL
-  también admiten `{version}` y `{fileName}`.
-- `versionPattern`, cuando se usa, debe incluir `(?P<version>...)`.
-- `artifacts` debe declarar exactamente un origen de URL (`urlPath` o
-  `urlTemplate`) y un checksum (`sha256Path` o `sha512Path`). El resultado debe
-  ser un ZIP HTTPS con un checksum válido.
+Tokens permitidos: `{track}` en índice, rutas y filtros; además `{version}` y
+`{fileName}` en plantillas de artefacto.
 
-Los antiguos tipos específicos de Go y PHP siguen siendo aceptados por EAP para
-compatibilidad con revisiones ya publicadas, pero los componentes nuevos deben
-usar `json-index`.
-
-Esto permite que un repositorio externo publique componentes como Go o PHP sin
-un cambio previo en el código de EAP. La frontera sigue siendo deliberadamente
-segura: la fuente debe ser una API JSON HTTPS, el artefacto un ZIP y el checksum
-debe estar disponible en esa respuesta.
-
-### 6.4 Directorio HTML declarativo
-
-`html-directory` cubre repositorios que publican versiones mediante enlaces
-HTML y el checksum en un documento independiente:
+### Índice HTML genérico
 
 ```json
 "resolver": {
   "type": "html-directory",
-  "indexUrl": "https://downloads.example.org/product-{track}/",
+  "indexUrl": "https://downloads.example.org/producto-{track}/",
   "releasePattern": "href=[\"']v?(?P<version>\\d+\\.\\d+\\.\\d+)/[\"']",
-  "artifactUrlTemplate": "https://downloads.example.org/product-{track}/v{version}/bin/product-{version}.zip",
+  "artifactUrlTemplate": "https://downloads.example.org/producto-{track}/v{version}/producto-{version}.zip",
   "checksumUrlTemplate": "{artifactUrl}.sha512",
   "checksumAlgorithm": "sha512"
 }
 ```
 
-- `releasePattern` debe capturar `(?P<version>...)`.
-- Las plantillas sólo aceptan HTTPS y los tokens documentados.
-- `checksumAlgorithm` admite `sha256` o `sha512`.
-- El artefacto final debe ser un ZIP y pertenecer al track solicitado.
-- `{track}` y `{version}` están disponibles en las URL; la plantilla del
-  checksum también admite `{artifactUrl}` y `{fileName}`.
+`releasePattern` captura `version`; el algoritmo es `sha256` o `sha512`.
+`checksumUrlTemplate` admite `{artifactUrl}` y `{fileName}` además de track y
+versión.
 
-Maven y Tomcat usan este contrato. `apache-directory` permanece disponible
-para no romper manifiestos de Maven publicados con versiones anteriores.
-
-Formatos distintos, instaladores, autenticación especial o páginas que no
-expongan una versión estable todavía necesitan ampliar un resolver genérico o
-incorporar un adaptador auditado en EAP.
-
-`verification` es obligatorio y documenta el origen de la verificación. Los
-resolvers obtienen el checksum desde su fuente oficial. `java-release` también
-puede usar:
-
-```json
-"verification": {
-  "implementorContains": "Eclipse Adoptium"
-}
-```
-
-## 7. Instalación
-
-### 7.1 Componente ZIP administrado
+## Instalación y validación
 
 ```json
 "install": {
@@ -516,32 +433,21 @@ puede usar:
 }
 ```
 
-| Campo | Contrato |
-|---|---|
-| `directoryTemplate` | Ruta relativa bajo `components`; admite `{provider}` y `{version}`. |
-| `stripSingleRoot` | Opcional. Si es `true`, el ZIP debe contener exactamente una carpeta raíz y EAP instala su contenido. |
-| `maxExtractBytes` | Opcional. Máximo total descomprimido, en bytes. Debe ser positivo. |
-| `requiredFiles` | Lista de archivos que deben existir tras extraer. Use `/` como separador. |
-| `validation` | Estrategia adicional de validación. |
+- `directoryTemplate` es relativa a `components` y sólo admite `{provider}` y
+  `{version}`.
+- `stripSingleRoot: true` exige que el ZIP tenga exactamente una carpeta raíz.
+- `requiredFiles` usa `/` y describe la estructura después de extraer y aplicar
+  `stripSingleRoot`.
+- `maxExtractBytes` es opcional, positivo y debe basarse en el tamaño real.
 
-La extracción rechaza rutas absolutas, `..`, rutas duplicadas, nombres de
-dispositivo Windows, enlaces simbólicos, exceso de tamaño y ratios de compresión
-peligrosos.
+Validaciones:
 
-### 7.2 Validaciones disponibles
+- `files-only`: comprueba `requiredFiles`; recomendada para GUI y servidores.
+- `command`: ejecuta un smoke test no interactivo del payload.
+- `java-release`: validación específica de JDK.
+- `eclipse-package`: validación específica de Eclipse.
 
-#### `files-only`
-
-Comprueba únicamente `requiredFiles`. Es la opción recomendada para aplicaciones
-gráficas, porque no las inicia durante la instalación.
-
-```json
-"validation": {"type": "files-only"}
-```
-
-#### `command`
-
-Ejecuta un smoke test dentro del payload:
+Ejemplo de `command`:
 
 ```json
 "validation": {
@@ -552,27 +458,55 @@ Ejecuta un smoke test dentro del payload:
 }
 ```
 
-- El primer elemento debe ser una ruta relativa a un archivo del payload.
-- `.cmd` y `.bat` se ejecutan mediante `cmd.exe`.
-- El directorio actual es la raíz extraída.
-- Código de salida distinto de cero, timeout o ausencia de `expectContains`
-  provocan el rechazo de la instalación.
-- Este tipo ejecuta código descargado automáticamente. Úselo sólo con
-  distribuciones confiables y comandos no interactivos.
+No use `command` si abre una GUI, inicia un servidor persistente o modifica el
+sistema.
 
-#### `java-release`
+## Entorno, datos y launchers
 
-Es específico de un JDK. Comprueba el archivo `release`, el track,
-`IMPLEMENTOR` y ejecuta `bin/java.exe -version`.
+El payload instalado es inmutable. Todo dato modificable se declara bajo
+`data` y debe resolverse dentro del profile.
 
-#### `eclipse-package`
+```json
+"data": {
+  "directories": [
+    {
+      "path": "{{data.component}}/cache",
+      "displayName": "Caché",
+      "role": "cache",
+      "showInDashboard": false
+    }
+  ],
+  "files": [
+    {
+      "path": "{{data.component}}/producto.properties",
+      "displayName": "Configuración",
+      "role": "configuration",
+      "showInDashboard": true,
+      "mode": "if-missing",
+      "content": "home={{data.component.posix}}/config\n"
+    }
+  ]
+}
+```
 
-Es específico de Eclipse. Comprueba que `eclipse.ini` declare mediante `-vm` un
-JRE incluido y confinado dentro del payload.
+Roles: `cache`, `commands`, `configuration`, `data`, `extensions`, `repository`
+y `workspace`. Los modos de archivo admitidos son `if-missing` y
+`merge-properties`.
 
-## 8. Launchers
+El entorno mínimo es:
 
-Un launcher publica una aplicación o comando arrancable desde EAP:
+```json
+"environment": {
+  "variables": {},
+  "path": []
+}
+```
+
+Campos opcionales: `appendable`, `unset`, `dataPath` y `commands`.
+`environment.path` apunta al payload; `dataPath`, a directorios mutables del
+profile. No publique rutas de `core`.
+
+Un launcher típico:
 
 ```json
 {
@@ -584,195 +518,35 @@ Un launcher publica una aplicación o comando arrancable desde EAP:
   "arguments": ["{{workspace.selected}}"],
   "environment": {},
   "unset": [],
-  "dataDirectories": [],
-  "dataCopies": [],
+  "dataDirectories": ["{{data.component}}/config"],
   "startMode": "detached"
 }
 ```
 
-| Campo | Valores y comportamiento |
-|---|---|
-| `type` | `application` o `command`. |
-| `workspaceMode` | `environment` usa el proyecto del profile; `component-data` usa un workspace privado del componente. |
-| `executable` | Debe quedar dentro del payload. En un componente externo debe ser exactamente `{{external.executable}}`. |
-| `arguments` | Lista de argumentos con plantillas. |
-| `startMode` | `detached` devuelve el control; `wait` espera y devuelve el código de salida. |
-| `environment` | Variables adicionales sólo para el launcher. |
-| `unset` | Variables heredadas que se eliminan para el launcher. |
-| `dataDirectories` | Directorios que EAP crea; deben quedar dentro de `{{data.component}}`. |
-| `dataCopies` | Copias iniciales de directorios del payload hacia datos mutables. |
+- `type`: `application` o `command`.
+- `workspaceMode`: `environment` o `component-data`.
+- `startMode`: `detached` o `wait`.
+- `dataCopies` puede copiar un directorio del payload a datos mutables sólo con
+  `mode: "if-missing"`.
+- No redefina ni elimine variables de identidad del profile (`HOME`,
+  `USERPROFILE`, `APPDATA`, `LOCALAPPDATA`, temporales, XDG, etc.).
 
-Ejemplo de copia mutable:
+Tokens comunes:
 
-```json
-"dataCopies": [
-  {
-    "source": "{{component.root}}/configuration",
-    "target": "{{data.component}}/configuration",
-    "mode": "if-missing"
-  }
-]
-```
+- payload: `{{component.root}}`, `{{component.provider}}`;
+- profile: `{{profile.id}}`, `{{profile.root}}`, `{{profile.home}}`,
+  `{{profile.temp}}`;
+- datos: `{{data.component}}`, `{{data.component.posix}}`,
+  `{{data.component.uri}}`;
+- workspace: `{{workspace.root}}`, `{{workspace.selected}}`;
+- EAP: `{{eap.root}}`, `{{environment.id}}`;
+- launcher/datos: `{{component.version}}`;
+- sólo externo: `{{external.executable}}`.
 
-`source` debe ser un directorio del payload, `target` debe quedar bajo los datos
-del componente y el único modo admitido es `if-missing`. EAP nunca sobrescribe
-el destino existente.
+No todos los tokens son válidos en todos los bloques. Copie el patrón de un
+manifiesto existente y no invente tokens.
 
-Los launchers no pueden redefinir ni eliminar las variables que forman la
-identidad portable del profile, como `HOME`, `USERPROFILE`, `APPDATA`,
-`LOCALAPPDATA`, temporales, XDG o `JAVA_TOOL_OPTIONS`.
-
-## 9. Entorno publicado
-
-```json
-"environment": {
-  "variables": {
-    "PRODUCTO_HOME": "{{component.root}}",
-    "PRODUCTO_OPTIONS": "--profile={{profile.id}}"
-  },
-  "appendable": ["PRODUCTO_OPTIONS"],
-  "unset": [],
-  "path": [
-    "{{component.root}}/bin"
-  ],
-  "dataPath": [],
-  "commands": []
-}
-```
-
-- `variables` y `path` son obligatorios, aunque estén vacíos.
-- `appendable` permite que un valor `env.NOMBRE` del usuario se anteponga,
-  separado por un espacio, al valor gestionado por el componente. La parte de
-  EAP queda al final y tiene precedencia cuando una opción se repite.
-- Cada entrada de `path` debe resolverse dentro de la instalación.
-- `dataPath` crea rutas mutables dentro del profile y las añade a `PATH`.
-- `unset` elimina primero cualquier variante mayúscula/minúscula de la variable.
-- No publique rutas de `core`.
-
-Un comando de entorno crea un wrapper `.cmd` que llama a un ejecutable del
-payload y reenvía los argumentos del usuario:
-
-```json
-"commands": [
-  {
-    "name": "producto",
-    "executable": "{{component.root}}/bin/producto.exe",
-    "arguments": ["--portable"]
-  }
-]
-```
-
-El nombre sigue las reglas de ID. Los argumentos declarados son literales y
-sólo admiten letras, números, `.`, `_`, `+` y `-`; no pueden contener espacios.
-
-## 10. Tokens de plantilla
-
-Los tokens desconocidos provocan un error. No todos están disponibles en todos
-los bloques.
-
-### Entorno (`environment.*`)
-
-- `{{component.root}}`
-- `{{component.provider}}`
-- `{{external.executable}}`
-- `{{profile.root}}`, `{{profile.home}}`, `{{profile.temp}}`
-- `{{data.component}}`
-- `{{workspace.root}}`, `{{workspace.selected}}`
-- `{{eap.root}}`
-- `{{profile.id}}`, `{{environment.id}}`
-
-### Launchers
-
-Todos los anteriores y además:
-
-- `{{component.version}}`
-- `{{data.component.uri}}`, útil para argumentos que requieren `file:///...`
-
-### `data.directories`, `data.files` y contenido de archivos
-
-Todos los tokens del entorno y además:
-
-- `{{component.version}}`
-- `{{data.component.posix}}`, ruta con separadores `/`
-
-`directoryTemplate` no usa estos tokens: sólo `{provider}` y `{version}`.
-
-## 11. Datos mutables
-
-Los payloads de `components/` se consideran inmutables. Configuración, caché,
-plugins y workspaces deben ir al profile mediante `data` o mediante opciones del
-launcher.
-
-```json
-"data": {
-  "directories": [
-    {
-      "path": "{{data.component}}/config",
-      "displayName": "Configuración",
-      "role": "configuration",
-      "showInDashboard": true
-    }
-  ],
-  "files": [
-    {
-      "path": "{{data.component}}/producto.properties",
-      "displayName": "Configuración portable",
-      "role": "configuration",
-      "showInDashboard": false,
-      "mode": "if-missing",
-      "content": "home={{data.component.posix}}/config\n"
-    }
-  ]
-}
-```
-
-Roles admitidos:
-
-- `cache`
-- `commands`
-- `configuration`
-- `data`
-- `extensions`
-- `repository`
-- `workspace`
-
-Todas las rutas deben quedar dentro del profile. Los archivos sólo admiten
-`mode: if-missing`, su contenido máximo es 1 MiB y nunca se sobrescriben después
-de que el usuario o la aplicación los modifiquen.
-
-## 12. Capacidades y dependencias
-
-Una capacidad permite que una Pocketool exija un componente activo:
-
-```json
-"capability": {
-  "id": "runtime.producto",
-  "exclusive": true
-}
-```
-
-Use nombres estables y cualificados, por ejemplo `runtime.java` o
-`app.api-client`.
-
-Los componentes también pueden declarar requisitos informativos:
-
-```json
-"requires": [
-  {
-    "capability": "runtime.java",
-    "minimumTrack": 17
-  }
-]
-```
-
-Actualmente EAP no instala ni bloquea automáticamente componentes por estos
-requisitos. Sirven como metadatos. `minimumTrack` debe ser entero en un
-manifiesto de componente.
-
-## 13. Componentes externos
-
-Un componente externo representa una aplicación que EAP no puede redistribuir
-o instalar:
+## Plantilla: componente externo
 
 ```json
 {
@@ -780,6 +554,17 @@ o instalar:
   "id": "producto-externo",
   "displayName": "Producto Externo",
   "kind": "external",
+  "info": {
+    "description": "Aplicación local vinculada a EAP.",
+    "paths": [
+      {
+        "displayName": "Workspace activo",
+        "base": "workspace",
+        "relativePath": ".",
+        "type": "directory"
+      }
+    ]
+  },
   "launchers": [
     {
       "id": "producto-externo",
@@ -792,7 +577,10 @@ o instalar:
     }
   ],
   "tracks": [
-    {"id": "local", "displayName": "Instalación local"}
+    {
+      "id": "local",
+      "displayName": "Instalación local"
+    }
   ],
   "defaultProvider": "external",
   "defaultTrack": "local",
@@ -802,8 +590,12 @@ o instalar:
       "id": "external",
       "componentId": "producto-externo-local",
       "displayName": "Instalación externa",
-      "resolver": {"type": "external-executable"},
-      "verification": {"type": "local-executable"}
+      "resolver": {
+        "type": "external-executable"
+      },
+      "verification": {
+        "type": "local-executable"
+      }
     }
   ],
   "install": {
@@ -811,48 +603,62 @@ o instalar:
     "executableNames": ["producto.exe"],
     "prompt": "Ruta completa a producto.exe"
   },
-  "data": {"directories": [], "files": []},
-  "environment": {"variables": {}, "path": []}
+  "data": {
+    "directories": [],
+    "files": []
+  },
+  "environment": {
+    "variables": {},
+    "path": []
+  }
 }
 ```
 
-Debe tener al menos un launcher. Sus nombres permitidos deben ser archivos `.exe`
-simples, sin rutas. El usuario lo vincula mediante:
+Un componente externo exige al menos un launcher. Cada `executableNames` debe
+ser un nombre simple terminado en `.exe`, sin ruta.
 
-```bat
-eap.cmd component install producto-externo --executable "C:\Program Files\Producto\producto.exe" --profile pruebas --yes
+## Registro y publicación
+
+Edite `catalog.json` en la misma entrega:
+
+```json
+{
+  "schemaVersion": 1,
+  "catalogVersion": "1.7.0",
+  "components": [
+    {
+      "id": "mi-componente",
+      "manifest": "components/mi-componente.json"
+    }
+  ]
+}
 ```
 
-## 14. Desarrollo y prueba de extremo a extremo
+Reglas:
 
-### Paso 1: elegir el ejemplo más próximo
+- el catálogo usa `schemaVersion: 1`;
+- `manifest` debe ser exactamente `components/<id>.json`;
+- no puede haber IDs duplicados;
+- catálogo y manifiesto tienen un límite de 1 MiB cada uno;
+- dos repositorios externos no pueden publicar el mismo ID;
+- EAP consulta la rama `main` de repositorios GitHub;
+- si cualquier manifiesto declarado es inválido, el refresh rechaza el snapshot
+  completo y conserva la revisión cacheada anterior.
 
-- Aplicación ZIP en GitHub: `components/bruno.json` o `vscodium.json`.
-- Aplicación con estado portable complejo: `dbeaver.json` o
-  `intellij-idea.json`.
-- CLI con smoke test: `git.json`, `maven.json` o `nodejs.json`.
-- Aplicación ya instalada: `kiro.json`.
+## Validación de extremo a extremo
 
-No copie un resolver específico de Java, Eclipse, JetBrains, Node o Python para
-un producto que no use exactamente esa fuente.
-
-### Paso 2: validar el JSON localmente
-
-PowerShell puede detectar errores de sintaxis:
+### 1. Sintaxis local
 
 ```powershell
 Get-Content .\catalog.json -Raw | ConvertFrom-Json | Out-Null
 Get-Content .\components\mi-componente.json -Raw | ConvertFrom-Json | Out-Null
 ```
 
-Esto sólo valida JSON. La validación autoritativa la realiza EAP al refrescar el
-repositorio.
+Esto sólo valida JSON, no el contrato EAP ni las URLs.
 
-### Paso 3: publicar en una rama `main` de prueba
+### 2. Fuente publicada
 
-EAP consulta actualmente la rama `main`. Haga commit y push del catálogo a un
-repositorio GitHub de prueba. Para un repositorio que sólo contenga componentes
-nuevos y con IDs únicos:
+Para un repositorio de prueba con IDs nuevos:
 
 ```bat
 eap.cmd component repository add pruebas https://github.com/usuario/eap-components-pruebas --yes
@@ -860,120 +666,63 @@ eap.cmd component refresh pruebas
 eap.cmd catalog
 ```
 
-Si prueba un fork completo del catálogo oficial, use temporalmente el mismo ID
-de fuente para evitar colisiones con `danielgube`:
+Para probar un fork completo del catálogo oficial, sustituya temporalmente la
+URL de la misma fuente; añadirlo con otro ID provocaría colisiones:
 
 ```bat
 eap.cmd component repository add danielgube https://github.com/usuario/eap-components --yes
 eap.cmd component refresh danielgube
 ```
 
-Al terminar, restaure la URL oficial:
-
-```bat
-eap.cmd component repository add danielgube https://github.com/danielgube/eap-components --yes
-eap.cmd component refresh danielgube
-```
-
-### Paso 4: probar en un profile desechable
+### 3. Resolución e instalación
 
 ```bat
 eap.cmd profile create pruebas-componente
-eap.cmd component resolve mi-componente --provider community --track 2 --json
-eap.cmd component install mi-componente --provider community --track 2 --profile pruebas-componente --yes
+eap.cmd component resolve mi-componente --provider official --track 1 --json
+eap.cmd component install mi-componente --provider official --track 1 --profile pruebas-componente --yes
 eap.cmd component list --profile pruebas-componente
 eap.cmd doctor
 ```
 
-Si tiene launcher:
+Si hay launcher:
 
 ```bat
 eap.cmd launch mi-componente --profile pruebas-componente --dry-run
-eap.cmd launch mi-componente --profile pruebas-componente
 ```
 
-Compruebe:
+Confirme la versión, el origen del checksum, la estructura instalada, las rutas
+de entorno y que el estado mutable queda fuera del payload. En `html-links`, el
+resolve indica que no hay checksum publicado y la instalación registra un
+SHA-256 local.
 
-- que la versión seleccionada es la esperada;
-- que el checksum procede de la fuente oficial;
-- que `requiredFiles` describe realmente el ZIP;
-- que variables y PATH apuntan al payload;
-- que configuración, caché y workspace no se escriben en el payload;
-- que una actualización dentro del mismo track funciona;
-- que desactivar y reactivar no requiere red;
-- que `doctor` no informa de errores.
+## Definition of Done
 
-## 15. Publicación y actualización
+- [ ] El ID coincide en catálogo, nombre de archivo y manifiesto.
+- [ ] El manifiesto usa `schemaVersion: 3`.
+- [ ] `catalog.json` contiene la entrada y `catalogVersion` se incrementó.
+- [ ] El resolver figura en esta guía y la fuente oficial responde.
+- [ ] La versión resuelta pertenece al track solicitado.
+- [ ] El ZIP es para Windows y usa HTTPS, salvo que HTTP sea imprescindible.
+- [ ] Hay SHA-256/SHA-512 oficial o se usa `html-links` con
+      `verification.type: "none"` de forma explícita.
+- [ ] `stripSingleRoot` y `requiredFiles` coinciden con el ZIP real.
+- [ ] La validación no abre una GUI ni deja un proceso persistente.
+- [ ] Configuración, caché y workspace quedan en el profile, no en el payload.
+- [ ] `component refresh` muestra el ID en `eap.cmd catalog`.
+- [ ] `resolve`, `install` y `doctor` terminan correctamente.
+- [ ] `launch --dry-run` es correcto cuando existe launcher.
+- [ ] No hay secretos, tokens ni credenciales en los JSON.
 
-Para publicar un componente nuevo:
+## Diagnóstico rápido
 
-1. Añada `components/<id>.json`.
-2. Añada su entrada a `catalog.json`.
-3. Incremente `catalogVersion`.
-4. Valide y pruebe desde EAP.
-5. Haga commit y push a `main`.
-
-Para actualizar uno existente:
-
-- no cambie su ID ni los IDs de proveedor sin una migración;
-- añada un track cuando aparezca una nueva línea compatible;
-- para `majorUpdates`, publique el track mayor sólo después de revisar la
-  release y sus posibles incompatibilidades;
-- cambie `defaultTrack` sólo después de probarla;
-- no fije una versión concreta si el resolver ya obtiene la última corrección;
-- aumente `maxExtractBytes` únicamente cuando el tamaño real lo justifique;
-- conserve las rutas de datos existentes para no perder preferencias.
-
-EAP fija en el lock el repositorio, commit, ruta y hash del manifiesto usado.
-
-## 16. Errores frecuentes
-
-### `Resolver no soportado`
-
-El valor de `resolver.type` no existe en EAP. Use uno de la tabla o solicite un
-nuevo adapter/resolver.
-
-### `no captura 'version'`
-
-`assetPattern` no contiene el grupo nombrado `(?P<version>...)`.
-
-### `no publicó el checksum`
-
-El asset de GitHub no tiene `digest`, o la fuente no publica SHA-256/SHA-512 en
-el formato esperado. No omita la verificación.
-
-### `no pertenece a la línea`
-
-La versión capturada no empieza por los grupos numéricos del track.
-
-### `Falta el archivo requerido`
-
-Revise la estructura real del ZIP y `stripSingleRoot`.
-
-### `sale del payload` o `sale de su perfil`
-
-Una ruta resuelta intenta escapar de su frontera. Payloads, datos y workspaces
-deben mantenerse separados.
-
-### `publicado por dos repositorios`
-
-Dos fuentes externas tienen el mismo ID. Quite una, cambie el ID del componente
-nuevo o sustituya temporalmente la URL de la misma fuente durante las pruebas.
-
-## 17. Checklist antes de una pull request
-
-- [ ] El ID coincide en carpeta, archivo, manifiesto y catálogo.
-- [ ] `schemaVersion` es `3`.
-- [ ] `catalogVersion` se ha incrementado.
-- [ ] Proveedor y track predeterminados existen.
-- [ ] El resolver es compatible y todas las URLs son HTTPS.
-- [ ] La versión resuelta pertenece al track.
-- [ ] El checksum procede de una fuente oficial.
-- [ ] El ZIP es Windows x64 y no necesita instalador.
-- [ ] `stripSingleRoot` coincide con la forma real del ZIP.
-- [ ] `requiredFiles` incluye ejecutables y archivos estructurales importantes.
-- [ ] La validación no abre accidentalmente una GUI.
-- [ ] Variables, PATH y ejecutables permanecen dentro del payload.
-- [ ] Configuración, caché, plugins y workspaces permanecen en el profile.
-- [ ] Se ha probado `resolve`, `install`, `launch --dry-run` y `doctor`.
-- [ ] No se han incluido secretos, tokens ni credenciales en el manifiesto.
+| Síntoma | Causa probable |
+|---|---|
+| No aparece tras refrescar | Falta la entrada en `catalog.json`, no se publicó en `main` o el refresh conservó la caché anterior. |
+| `Resolver no soportado` | `resolver.type` no está implementado en EAP. |
+| `no captura 'version'` | Falta el grupo `(?P<version>...)` en el patrón. |
+| `no publicó el checksum` | La fuente no expone SHA-256/SHA-512 en el lugar esperado. |
+| `no publicó un ZIP` con `html-links` | `linkPattern`, exclusiones, track o navegación no coinciden con los enlaces HTML reales. |
+| `no pertenece a la línea` | La versión capturada no comienza por los grupos del track. |
+| `Falta el archivo requerido` | `requiredFiles` o `stripSingleRoot` no reflejan el ZIP. |
+| `sale del payload` / `sale de su perfil` | Una ruta cruza la frontera permitida. |
+| `publicado por dos repositorios` | Dos fuentes externas declaran el mismo ID. |
